@@ -1,0 +1,22 @@
+Task ID,Sprint,Task Description,Assignee,Start Date,Target Date,Actual Completion Date,Status,Notes
+1,Sprint 1,Project repo init — Next.js / TypeScript / Tailwind / Framer Motion,Gitika Rath,Feb 16 2026,Feb 18 2026,Feb 18 2026,Completed,Tech stack agreed with team
+2,Sprint 1,Authentication flow — Sign-up & Login pages,Gitika Rath,Feb 18 2026,Feb 20 2026,Feb 20 2026,Completed,Includes session persistence
+3,Sprint 1,Onboarding flow — Height / Weight / Goals / Period opt-in,Gitika Rath,Feb 20 2026,Feb 23 2026,Feb 23 2026,Completed,Multi-step wizard UI
+4,Sprint 1,Routine engine — 8 goal-based routine groups & data model,Gitika Rath,Feb 23 2026,Feb 26 2026,Feb 26 2026,Completed,Goals: Belly Fat / Abs / Glutes / Full Body / Stress Relief etc.
+5,Sprint 1,Post-workout feedback loop & witty reminder copy,Gitika Rath,Feb 26 2026,Feb 28 2026,Feb 28 2026,Completed,5-emoji feeling check-in after each session
+6,Sprint 1,Period Tracker UI — log cycle start / end / notes,Gitika Rath,Feb 28 2026,Mar 2 2026,Mar 2 2026,Completed,Data stored locally for privacy
+7,Sprint 1,Reminder settings UI — custom time & motivational nudges,Gitika Rath,Feb 28 2026,Mar 2 2026,Mar 2 2026,Completed,Witty copy paired with time picker
+8,Sprint 1,"Home Dashboard — streak card, Today's Vibe, goal recs, resume card",Mugdha,Feb 20 2026,Feb 25 2026,Feb 25 2026,Completed,Primary landing screen after login
+9,Sprint 1,30-day Routine Library — per-day exercises with reps / tips,Mugdha,Feb 23 2026,Feb 28 2026,Feb 28 2026,Completed,All 8 routine groups covered
+10,Sprint 1,YouTube tutorial link integration into day views,Mugdha,Feb 28 2026,Mar 10 2026,Mar 10 2026,Completed,Embedded YouTube links per exercise
+11,Sprint 1,"Progress Analytics dashboard — streaks, sessions, weekly bar chart",Mugdha,Mar 1 2026,Mar 5 2026,Mar 5 2026,Completed,Longest streak + days active + sessions this week
+12,Sprint 1,Profile backup / export-import feature,Mugdha,Mar 5 2026,Mar 8 2026,Mar 8 2026,Completed,JSON export/import for profile data
+13,Sprint 1,Sprint #1 Status Report document,Gitika Rath,Mar 12 2026,Mar 15 2026,Mar 15 2026,Completed,PDF submitted on Canvas
+14,Sprint 1,Vibe Sync — mood-based playlist API integration,—,Mar 1 2026,Mar 15 2026,,Moved to Sprint 2,Deprioritized to focus on core flows
+15,Sprint 1,"Video hosting strategy — AWS S3 / YouTube embed decision, implementation",—,Mar 1 2026,Mar 15 2026,,Moved to Sprint 2,Needs infrastructure decision before implementation
+16,Sprint 2,"User testing — recruit 3–5 college student testers (Alex & Maya personas)",Both,Mar 16 2026,TBD,,Not Started,Collect qualitative usability feedback
+17,Sprint 2,Diet Fuel Guide — weekly budget-friendly diet tips section,TBD,Mar 16 2026,TBD,,Not Started,PRD Feature #6
+18,Sprint 2,Accessibility audit — high-contrast colors / scalable text verification,Both,Mar 16 2026,TBD,,Not Started,Per PRD non-functional requirements
+19,Sprint 2,Performance testing — routine library load time under 2 seconds,Both,Mar 16 2026,TBD,,Not Started,Test on throttled network connection
+20,Sprint 2,Vibe Sync — mood-based playlist API integration,TBD,Mar 16 2026,TBD,,Not Started,Evaluate Spotify vs YouTube Music API
+21,Sprint 2,"Video hosting strategy — AWS S3 / YouTube embed decision, implementation",TBD,Mar 16 2026,TBD,,Not Started,Moved from Sprint 1 — needs infrastructure decision

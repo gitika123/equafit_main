@@ -1,0 +1,588 @@
+% ============================================================
+%  CS161 Team 4 — EquaFit  |  Sprint #1 Status Report
+%  Compile with: pdflatex CS161_Team4_Sprint1_Documentation.tex
+% ============================================================
+\documentclass[11pt, letterpaper]{article}
+
+% ── Packages ────────────────────────────────────────────────
+\usepackage[margin=1in, top=0.85in, bottom=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{lmodern}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{multirow}
+\usepackage{colortbl}
+\usepackage{pifont}
+\usepackage{amsmath}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+% ── Colour palette ──────────────────────────────────────────
+\definecolor{primary}{HTML}{1A1A2E}
+\definecolor{accent}{HTML}{E94560}
+\definecolor{accentsoft}{HTML}{F7A8B8}
+\definecolor{highlight}{HTML}{16213E}
+\definecolor{lightbg}{HTML}{F5F7FA}
+\definecolor{tabhead}{HTML}{2D3561}
+\definecolor{greentick}{HTML}{27AE60}
+\definecolor{redcross}{HTML}{E74C3C}
+\definecolor{orangewarn}{HTML}{F39C12}
+\definecolor{divider}{HTML}{DADDE1}
+
+% ── Hyperref setup ──────────────────────────────────────────
+\hypersetup{
+  colorlinks = true,
+  linkcolor  = accent,
+  urlcolor   = accent,
+  citecolor  = accent,
+  pdfauthor  = {Team 4 — EquaFit},
+  pdftitle   = {CS161 Sprint \#1 Status Report},
+}
+
+% ── Section heading — manual redefinition (avoids titlesec+hyperref clash) ──
+\makeatletter
+\renewcommand{\section}[1]{%
+  \refstepcounter{section}%
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}%
+  \par\vspace{18pt}%
+  \noindent{\large\bfseries%
+    {\color{accent}\thesection.}\hspace{8pt}{\color{primary}#1}}%
+  \par\nobreak\vspace{3pt}%
+  \noindent{\color{accent}\rule{\linewidth}{1.8pt}}%
+  \par\vspace{8pt}%
+  \@afterheading%
+}
+\makeatother
+
+% ── Subsection heading (titlesec is fine for this level) ────
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{highlight}}
+  {\thesubsection.}
+  {6pt}
+  {#1}
+\titlespacing*{\subsection}{0pt}{12pt}{4pt}
+
+% ── Custom tcolorbox styles ─────────────────────────────────
+\tcbset{
+  wellbox/.style={
+    enhanced, breakable,
+    colback=greentick!8, colframe=greentick,
+    arc=4pt, boxrule=1.2pt,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+    fonttitle=\bfseries\color{greentick},
+    title={\ding{52}\hspace{4pt}What Went Well},
+  },
+  issuebox/.style={
+    enhanced, breakable,
+    colback=redcross!7, colframe=redcross,
+    arc=4pt, boxrule=1.2pt,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+    fonttitle=\bfseries\color{redcross},
+    title={\ding{55}\hspace{4pt}Issues \& Challenges},
+  },
+  infobox/.style={
+    enhanced, breakable,
+    colback=lightbg, colframe=tabhead,
+    arc=4pt, boxrule=1pt,
+    left=10pt, right=10pt, top=8pt, bottom=8pt,
+    fonttitle=\bfseries\color{tabhead},
+  },
+  nextsprint/.style={
+    enhanced, breakable,
+    colback=accent!7, colframe=accent,
+    arc=4pt, boxrule=1.2pt,
+    left=8pt, right=8pt, top=6pt, bottom=6pt,
+    fonttitle=\bfseries\color{accent},
+    title={\ding{228}\hspace{4pt}Looking Ahead — Sprint \#2},
+  },
+  badgebox/.style={
+    enhanced, arc=20pt,
+    colback=accent, colframe=accent,
+    boxrule=0pt, top=4pt, bottom=4pt,
+    left=12pt, right=12pt,
+    nobeforeafter,
+  },
+}
+
+% ── Header / Footer ─────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyhead[L]{\small\color{gray}\textit{EquaFit — Status Report Sprint \#1}}
+\fancyhead[R]{\small\color{gray}\textit{CS 161 | Team 4 | Spring 2026}}
+\fancyfoot[C]{\small\color{gray}\thepage}
+
+% ── Checkbox helpers ────────────────────────────────────────
+\newcommand{\done}{\textcolor{greentick}{\ding{52}}}
+\newcommand{\pend}{\textcolor{orangewarn}{\ding{119}}}
+\newcommand{\miss}{\textcolor{redcross}{\ding{55}}}
+
+% ════════════════════════════════════════════════════════════
+\begin{document}
+\thispagestyle{empty}
+
+% ── COVER PAGE ──────────────────────────────────────────────
+\begin{tcolorbox}[
+  enhanced,
+  arc=0pt,
+  colback=primary,
+  colframe=primary,
+  left=0pt, right=0pt, top=0pt, bottom=0pt,
+  boxrule=0pt,
+]
+
+  % Top accent bar
+  \textcolor{accent}{\rule{\linewidth}{5pt}}
+
+  \vspace{28pt}
+  \begin{center}
+
+    % Course tag
+    {\small\color{accentsoft}\texttt{CS 161 · Section 02 · Spring 2026}}\\[14pt]
+
+    % Product name
+    {\fontsize{48}{54}\selectfont\bfseries\color{accent} EquaFit}\\[6pt]
+
+    % Tagline
+    {\fontsize{12}{16}\selectfont\color{accentsoft}\itshape
+      Adaptive Student Wellness System}\\[28pt]
+
+    % Divider
+    \textcolor{accent!40}{\rule{0.55\linewidth}{0.5pt}}\\[24pt]
+
+    % Document title badge
+    {\fontsize{16}{20}\selectfont\bfseries\color{white}
+      STATUS REPORT}\\[6pt]
+    \begin{tcolorbox}[badgebox]
+      {\large\bfseries\color{white} SPRINT \#1}
+    \end{tcolorbox}\\[10pt]
+    {\normalsize\color{lightbg}
+      Sprint Period:\enspace Feb 16 – March 15, 2026}\\[32pt]
+
+    % Divider
+    \textcolor{accent!40}{\rule{0.55\linewidth}{0.5pt}}\\[24pt]
+
+    % Team info block
+    {\normalsize\color{white}
+      \renewcommand{\arraystretch}{1.6}
+      \begin{tabular}{r@{\hspace{10pt}}l}
+        \textcolor{accentsoft}{\textbf{Team}} &
+          Team 4 — EquaFit \\
+        \textcolor{accentsoft}{\textbf{Leader}} &
+          Gitika Rath \\
+        \textcolor{accentsoft}{\textbf{Members}} &
+          Gitika Rath \enspace\&\enspace Mugdha \\
+        \textcolor{accentsoft}{\textbf{Course}} &
+          CS 161, Section 02 — Software Project \\
+        \textcolor{accentsoft}{\textbf{Semester}} &
+          Spring 2026 \\
+        \textcolor{accentsoft}{\textbf{Date Submitted}} &
+          March 15, 2026 \\
+      \end{tabular}
+    }
+
+    \vspace{26pt}
+    \textcolor{accent!40}{\rule{0.55\linewidth}{0.5pt}}\\[16pt]
+
+    % Stack pills
+    {\small\color{divider}
+      \texttt{Next.js}\enspace
+      \textcolor{accent}{$\cdot$}\enspace
+      \texttt{TypeScript}\enspace
+      \textcolor{accent}{$\cdot$}\enspace
+      \texttt{Tailwind CSS}\enspace
+      \textcolor{accent}{$\cdot$}\enspace
+      \texttt{Framer Motion}
+    }
+
+    \vspace{20pt}
+
+  \end{center}
+
+  % Bottom accent bar
+  \textcolor{accent}{\rule{\linewidth}{5pt}}
+
+\end{tcolorbox}
+
+\newpage
+\setcounter{page}{1}
+
+% ════════════════════════════════════════════════════════════
+\section{Sprint Overview}
+
+\begin{tcolorbox}[infobox, title={\ding{228}\hspace{4pt}Sprint \#1 at a Glance}]
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabular}{@{}ll@{}}
+    \textbf{Sprint Start:}    & Feb 16, 2026 \\
+    \textbf{Sprint End:}      & March 15, 2026 \\
+    \textbf{Sprint Goal:}     & Deliver EquaFit v0 — Auth, Onboarding, Dashboards, \\
+                              & Routine Engine, Period Tracker, and Progress Analytics. \\
+    \textbf{Overall Status:}  & \textcolor{greentick}{\textbf{Completed}} — All planned sprint goals achieved. \\
+    \textbf{Product Backlog:} & \href{https://docs.google.com/spreadsheets/d/1NZB72NNLGT1Y-alczYRndx01OiTyR3Vi75_eidc-8IQ/edit?usp=sharing}%
+                                {\texttt{Google Sheets — EquaFit Sprint Backlog (click to open)}} \\
+  \end{tabular}
+\end{tcolorbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Team Information}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{0.72\linewidth}{|>{\bfseries\color{tabhead}}l|X|}
+  \hline
+  \rowcolor{tabhead}
+  \color{white}\textbf{Name} &
+  \color{white}\textbf{Role} \\
+  \hline
+  Gitika Rath  & Team Leader \\
+  \hline
+  Mugdha       & Team Member \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\vspace{4pt}
+\noindent\small
+\textit{Course:} CS 161 Section 02 — Software Project, Spring 2026\quad
+\textit{Due:} March 15, 2026
+
+% ════════════════════════════════════════════════════════════
+\section{Product Backlog \& Task Assignment}
+
+\noindent A live, shared copy of the product backlog is accessible via Google Sheets:
+
+\begin{center}
+  \href{https://docs.google.com/spreadsheets/d/1NZB72NNLGT1Y-alczYRndx01OiTyR3Vi75_eidc-8IQ/edit?usp=sharing}%
+       {\texttt https://docs.google.com/spreadsheets/d/1NZB72NNLGT1Y-alczYRndx01OiTyR3Vi75_eidc-8IQ/edit?usp=sharing}
+\end{center}
+
+\vspace{4pt}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\fontsize{9.5}{12}\selectfont
+\begin{tabularx}{\linewidth}{|c|X|l|l|c|}
+  \hline
+  \rowcolor{tabhead}
+  \color{white}\textbf{\#} &
+  \color{white}\textbf{Task Description} &
+  \color{white}\textbf{Assignee} &
+  \color{white}\textbf{Target Date} &
+  \color{white}\textbf{Status} \\
+  \hline
+  1 & Project repo init (Next.js, TypeScript, Tailwind, Framer Motion) & Gitika & Feb 18, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  2 & Authentication flow — Sign-up \& Login pages & Gitika & Feb 20, 2026 & \done \\
+  \hline
+  3 & Onboarding flow — Height, Weight, Goals, Period opt-in & Gitika & Feb 23, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  4 & Routine engine — 8 goal-based routine groups \& data model & Gitika & Feb 26, 2026 & \done \\
+  \hline
+  5 & Post-workout feedback loop \& witty reminder copy & Gitika & Feb 28, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  6 & Period Tracker UI — log cycle start / end / notes & Gitika & Mar 2, 2026 & \done \\
+  \hline
+  7 & Reminder settings UI — custom time \& motivational nudges & Gitika & Mar 2, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  8 & Home Dashboard — streak card, "Today's vibe", goal recs, resume card & Mugdha & Feb 25, 2026 & \done \\
+  \hline
+  9 & 30-day Routine Library — per-day exercises, reps, tips & Mugdha & Feb 28, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  10 & Progress Analytics dashboard — streaks, sessions, weekly bar chart & Mugdha & Mar 5, 2026 & \done \\
+  \hline
+  11 & Profile backup / export-import feature & Mugdha & Mar 8, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  12 & YouTube tutorial link integration into day views & Mugdha & Mar 10, 2026 & \done \\
+  \hline
+  13 & Sprint \#1 status report document & Gitika and Mugdha & Mar 15, 2026 & \done \\
+  \hline
+  \rowcolor{lightbg}
+  14 & Vibe Sync — mood-based playlist integration & — & Mar 15, 2026 & \pend \\
+  \hline
+  15 & Video hosting strategy (AWS S3 / proprietary) & — & Mar 15, 2026 & \pend \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\vspace{4pt}
+{\small\textit{Legend:} \done~Completed\quad \pend~Moved to Sprint \#2\quad \miss~Not Started}
+
+% ════════════════════════════════════════════════════════════
+\section{Individual Contributions}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\linewidth}{|>{\bfseries}p{2.4cm}|X|}
+  \hline
+  \rowcolor{tabhead}\color{white}\textbf{Member} & \color{white}\textbf{Contributions} \\
+  \hline
+  Gitika Rath \newline\small(Leader) &
+  \begin{itemize}[leftmargin=*, noitemsep, topsep=2pt]
+    \item Led sprint planning, task delegation, and roadmap alignment
+    \item Architected the full-stack project structure in Next.js (App Router)
+    \item Implemented Authentication (Sign-up / Login) and Onboarding user flows
+    \item Built Routine Groups UI with 8 goal-based categories
+    \item Developed Post-workout feeling check-in and Reminder notification system
+    \item Integrated the Period Tracker with cycle-aware workout suggestions and improved it to be more interactive (visual cycle calendar, animated transitions)
+    \item Improved the overall UI — spacing, color consistency, and motion polish across all screens
+  \end{itemize} \\
+  \hline
+  Mugdha &
+  \begin{itemize}[leftmargin=*, noitemsep, topsep=2pt]
+    \item Designed and built the Home Dashboard (streak card, "Today's Vibe", recommendations, resume card)
+    \item Built the 30-day Routine Library with per-day exercise lists, reps, tips, and YouTube tutorial links
+    \item Created the Progress Analytics dashboard (longest streak, days active, sessions, weekly bar chart)
+    \item Implemented the Profile backup / export-import feature
+    \item Contributed to UI design and visual polish across all screens
+  \end{itemize} \\
+  \hline
+\end{tabularx}
+\end{center}
+
+% ════════════════════════════════════════════════════════════
+\section{Scrum Meetings Log}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\linewidth}{|c|l|l|X|}
+  \hline
+  \rowcolor{tabhead}
+  \color{white}\textbf{\#} &
+  \color{white}\textbf{Date} &
+  \color{white}\textbf{Format} &
+  \color{white}\textbf{Focus / Agenda} \\
+  \hline
+  1 & Feb 18, 2026 & In-Class             & Scope alignment, professor feedback, Sprint \#1 kickoff \\
+  \hline
+  \rowcolor{lightbg}
+  2 & Feb 21, 2026 & Zoom / Stand-up      & Feature review, tech stack agreement, repo setup check \\
+  \hline
+  3 & Feb 24, 2026 & Collaborative Session & Auth + Onboarding code review, design decisions, pair programming \\
+  \hline
+  \rowcolor{lightbg}
+  4 & Feb 28, 2026 & Zoom / Stand-up      & Mid-sprint check-in, routine engine progress review, blocker discussion \\
+  \hline
+  5 & Mar 5, 2026  & Collaborative Session & Dashboard integration, code merging, UI polish, backlog update \\
+  \hline
+  \rowcolor{lightbg}
+  6 & Mar 10, 2026 & In-Class             & Sprint wrap-up review, YouTube integration check, final task assignments \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\vspace{4pt}
+\noindent\textbf{Total Scrum Meetings:} 6\quad\textbar\quad
+\textbf{In-Class:} 2\quad\textbar\quad
+\textbf{Virtual / Zoom:} 2\quad\textbar\quad
+\textbf{Collaborative Working Sessions:} 2
+
+\vspace{6pt}
+\noindent\textit{Stand-up check-ins ran 5–8 minutes; collaborative working sessions ran 60–90 minutes. The team maintained a meeting roughly every 3–4 days throughout the sprint.}
+
+% ════════════════════════════════════════════════════════════
+\section{Sprint Retrospective}
+
+\begin{tcolorbox}[wellbox]
+  \begin{itemize}[leftmargin=*, noitemsep]
+    \item \textbf{Complete feature delivery:} All 13 development tasks were completed on or before the sprint deadline.
+    \item \textbf{Tech stack compatibility:} Next.js App Router, Tailwind, and Framer Motion worked seamlessly, enabling rapid prototyping.
+    \item \textbf{User flow cohesion:} The period-aware suggestion system and post-workout feedback loop integrated smoothly with no refactoring needed.
+    \item \textbf{Communication cadence:} Regular Zoom and in-class check-ins kept both members fully synchronized throughout the sprint.
+  \end{itemize}
+\end{tcolorbox}
+
+\vspace{10pt}
+
+\begin{tcolorbox}[issuebox]
+  \begin{itemize}[leftmargin=*, noitemsep]
+    \item \textbf{Content volume decision (resolved):} Early in the sprint, we debated feasibility of 30-day routines for all 8 goal groups. Resolved by defining a \textit{shared exercise pool} filtered per goal, reducing duplication.
+    \item \textbf{Video hosting uncertainty (ongoing):} YouTube embed links were used as a short-term fix. Hosting proprietary video via AWS S3 is an open question for Sprint \#2.
+    \item \textbf{No external user testing yet:} All testing was internal. No usability data from real college students has been collected — planned for Sprint \#2.
+    \item \textbf{Vibe Sync not integrated:} The mood-based playlist feature was deprioritized to keep focus on core flows; moved to Sprint \#2.
+  \end{itemize}
+\end{tcolorbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Task Completion Summary}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\linewidth}{|X|c|c|}
+  \hline
+  \rowcolor{tabhead}
+  \color{white}\textbf{Feature / Task Area} &
+  \color{white}\textbf{Sprint} &
+  \color{white}\textbf{Status} \\
+  \hline
+  Repository setup \& tech stack              & Sprint 1 & \done~Completed \\
+  \hline
+  \rowcolor{lightbg}
+  Authentication — Sign-up \& Login          & Sprint 1 & \done~Completed \\
+  \hline
+  Onboarding user flow                        & Sprint 1 & \done~Completed \\
+  \hline
+  \rowcolor{lightbg}
+  Routine engine (8 goal-based groups)        & Sprint 1 & \done~Completed \\
+  \hline
+  Post-workout feedback \& witty reminders    & Sprint 1 & \done~Completed \\
+  \hline
+  \rowcolor{lightbg}
+  Period Tracker UI                           & Sprint 1 & \done~Completed \\
+  \hline
+  Reminder settings UI                        & Sprint 1 & \done~Completed \\
+  \hline
+  \rowcolor{lightbg}
+  Home Dashboard                              & Sprint 1 & \done~Completed \\
+  \hline
+  30-day Routine Library (per-day + YouTube)  & Sprint 1 & \done~Completed \\
+  \hline
+  \rowcolor{lightbg}
+  Progress Analytics dashboard               & Sprint 1 & \done~Completed \\
+  \hline
+  Profile backup / export-import             & Sprint 1 & \done~Completed \\
+  \hline
+  \rowcolor{lightbg}
+  Vibe Sync (mood-based playlist)            & Sprint 1 & \pend~Moved to Sprint 2 \\
+  \hline
+  Video hosting strategy                     & Sprint 1 & \pend~Moved to Sprint 2 \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\vspace{4pt}
+\noindent\textbf{Completed:} 11/13\quad\textbf{Moved to Sprint \#2:} 2\quad\textbf{Unplanned additions:} 0
+
+% ════════════════════════════════════════════════════════════
+\section{Sprint \#2 Planning}
+
+\begin{tcolorbox}[nextsprint]
+  \textbf{Process Changes:}
+  \begin{itemize}[leftmargin=*, noitemsep, topsep=4pt]
+    \item Introduce a \textbf{Definition of Done (DoD)} checklist for each task, including a brief manual test scenario.
+    \item Add a \textbf{mid-sprint demo} (after $\sim$1 week) where both members show their progress to each other.
+    \item Maintain the 3–4 day meeting cadence that proved effective in Sprint \#1.
+  \end{itemize}
+
+  \vspace{6pt}
+  \textbf{Sprint \#2 Feature Goals:}
+  \begin{itemize}[leftmargin=*, noitemsep, topsep=4pt]
+    \item \textbf{Vibe Sync:} Integrate mood-based music playlist API (Spotify or YouTube Music).
+    \item \textbf{Video hosting:} Evaluate AWS S3 vs. YouTube embed; implement the chosen strategy.
+    \item \textbf{User testing:} Recruit 3–5 college students matching Alex and Maya personas; collect qualitative feedback.
+    \item \textbf{Diet Fuel Guide:} Build weekly budget-friendly diet tips section (PRD Feature \#6).
+    \item \textbf{Accessibility audit:} Verify high-contrast colors and scalable text per PRD non-functional requirements.
+    \item \textbf{Performance testing:} Confirm routine library loads in under 2 seconds on a throttled connection.
+  \end{itemize}
+\end{tcolorbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Key Metrics Snapshot}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{0.80\linewidth}{|X|c|}
+  \hline
+  \rowcolor{tabhead}
+  \color{white}\textbf{Metric} &
+  \color{white}\textbf{Value} \\
+  \hline
+  Total sprint tasks planned         & 13 \\
+  \hline
+  \rowcolor{lightbg}
+  Tasks completed                    & 11 \\
+  \hline
+  Tasks moved to next sprint         & 2  \\
+  \hline
+  \rowcolor{lightbg}
+  Total scrum meetings held          & 6  \\
+  \hline
+  Major blockers encountered         & 0  \\
+  \hline
+  \rowcolor{lightbg}
+  Team members contributing          & 2/2 (100\%) \\
+  \hline
+\end{tabularx}
+\end{center}
+
+% ────────────────────────────────────────────────────────────
+\vspace{18pt}
+\noindent\textcolor{divider}{\rule{\linewidth}{0.5pt}}
+\vspace{4pt}
+
+\noindent\small\textit{This document was prepared by Team 4 (EquaFit) for CS 161 Section 02, Spring 2026. All dates and meeting records reflect actual team activity during Sprint \#1 (Feb 16 – March 15, 2026).}
+
+% ════════════════════════════════════════════════════════════
+\newpage
+\section{Appendix — App Screenshots}
+
+\noindent The following screenshots are taken from the live EquaFit application as delivered at the end of Sprint \#1.
+
+% ── Helper: full-width framed screenshot with caption ───────
+\newcommand{\appscreen}[2]{%
+  \vspace{10pt}
+  \begin{center}
+    \begin{tcolorbox}[
+      enhanced, arc=6pt,
+      colback=white, colframe=divider,
+      boxrule=0.8pt,
+      left=4pt, right=4pt, top=4pt, bottom=4pt,
+      title={\small\bfseries\color{tabhead} #2},
+      fonttitle=\small\bfseries\color{tabhead},
+      attach boxed title to top left={yshift=-2mm, xshift=8pt},
+      boxed title style={colback=lightbg, colframe=divider, arc=3pt, boxrule=0.6pt},
+    ]
+      \includegraphics[width=\linewidth]{#1}
+    \end{tcolorbox}
+  \end{center}
+  \vspace{4pt}
+}
+
+% ── Screen 1 & 2: Auth + Onboarding ────────────────────────
+\appscreen{ login.jpg}{Figure 1 — Login Screen}
+
+\appscreen{abt.jpg}{Figure 2 — Onboarding Step 1 of 3 }
+
+\appscreen{goals.jpg}{Figure 3 — Onboarding Step 2 of 3.}
+
+\appscreen{ nable period.jpg}{Figure 4 — Onboarding Step 3 of 3 }
+
+% ── Screen 5: Home ──────────────────────────────────────────
+\appscreen{ home.jpg}{Figure 5 — Home Dashboard}
+
+% ── Screen 6: Routines ──────────────────────────────────────
+\appscreen{ routines.jpg}{Figure 6 — Routines Library}
+
+% ── Screen 7: Progress ──────────────────────────────────────
+\appscreen{ progress.jpg}{Figure 7 — Progress Dashboard}
+
+% ── Screen 8: Cycle Tracker ─────────────────────────────────
+\appscreen{ cycle.jpg}{Figure 8 — Cycle Tracker }
+
+% ── Screen 9: Reminders ─────────────────────────────────────
+\appscreen{ reminders.jpg}{Figure 9 — Reminders}
+
+% ── Screen 10: Profile ──────────────────────────────────────
+\appscreen{ Profile.jpg}{Figure 10 — Profile Page}
+
+\vspace{12pt}
+\noindent\textcolor{divider}{\rule{\linewidth}{0.5pt}}
+\vspace{4pt}
+\noindent\small\textit{All screenshots depict Sprint \#1 deliverables running live on the Next.js development server. No mock-ups were used.}
+
+\end{document}
