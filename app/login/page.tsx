@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { isOnboardingDone } from "@/lib/user-store";
+import { validateEmail, validateLoginPassword } from "@/lib/user-validation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -17,8 +18,16 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!email.trim()) { setError("Please enter your email"); return; }
-    if (!password.trim()) { setError("Please enter your password"); return; }
+    const em = validateEmail(email);
+    if (!em.ok) {
+      setError(em.message);
+      return;
+    }
+    const pw = validateLoginPassword(password);
+    if (!pw.ok) {
+      setError(pw.message);
+      return;
+    }
     const result = await login(email.trim(), password);
     if (result.error) { setError(result.error); return; }
     router.push(isOnboardingDone() ? "/" : "/onboarding");

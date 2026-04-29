@@ -19,6 +19,8 @@ export interface DietFuelRecipe {
   steps: string[];
   /** One line on why it’s worth making */
   whyItWorks?: string;
+  /** Optional dish photo; otherwise a cuisine stock image is used */
+  imageUrl?: string;
 }
 
 export interface DietFuelWeek {
@@ -53,6 +55,7 @@ export const DIET_FUEL_WEEKS: DietFuelWeek[] = [
         name: "5-minute masala eggs on toast",
         cuisine: "Indian",
         minutes: 10,
+        imageUrl: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&h=500&fit=crop&q=80",
         feeds: "1 hungry person",
         pantryStaples: ["Eggs", "Bread or frozen paratha", "Onion", "Tomato or canned diced", "Oil", "Salt", "Chili powder or paprika", "Cumin (optional)"],
         steps: [
@@ -536,4 +539,17 @@ export function groupRecipesByCuisine(): Record<DietFuelCuisine, RecipeWithWeekM
     }
   }
   return init;
+}
+
+const RECIPE_CUISINE_HERO: Record<DietFuelCuisine, string> = {
+  Indian: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&h=500&fit=crop&q=80",
+  Chinese: "https://images.unsplash.com/photo-1563245372-f21724e38593?w=800&h=500&fit=crop&q=80",
+  Thai: "https://images.unsplash.com/photo-1559314809-0d155014e29e?w=800&h=500&fit=crop&q=80",
+  Mediterranean: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&h=500&fit=crop&q=80",
+  Mexican: "https://images.unsplash.com/photo-1565299585323-38174c0b5d0a?w=800&h=500&fit=crop&q=80",
+  "Global / dorm": "https://images.unsplash.com/photo-1490645935967-10de286bae44?w=800&h=500&fit=crop&q=80",
+};
+
+export function getRecipeHeroImage(recipe: Pick<DietFuelRecipe, "cuisine" | "imageUrl">): string {
+  return recipe.imageUrl ?? RECIPE_CUISINE_HERO[recipe.cuisine];
 }

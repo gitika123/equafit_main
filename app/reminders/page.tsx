@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { getReminderSettings, setReminderSettings } from "@/lib/user-store";
 import { WITTY_REMINDERS, getRandomReminder } from "@/lib/reminders";
 import type { ReminderSettings } from "@/lib/user-store";
+import { validateReminderTime } from "@/lib/user-validation";
 
 export default function RemindersPage() {
   const [settings, setSettings] = useState<ReminderSettings>({ enabled: false, time: "09:00", messages: [] });
@@ -15,19 +16,35 @@ export default function RemindersPage() {
     typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default"
   );
 
+  const [timeError, setTimeError] = useState("");
+
   useEffect(() => {
-    setSettings(getReminderSettings());
+    const raw = getReminderSettings();
+    const v = validateReminderTime(raw.time);
+    setSettings({ ...raw, time: v.ok ? raw.time : "09:00" });
     setPreview(getRandomReminder());
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
+    const v = validateReminderTime(settings.time);
+    if (!v.ok) {
+      setTimeError(v.message);
+      return;
+    }
+    setTimeError("");
     setReminderSettings(settings);
   }, [settings, hydrated]);
 
   function toggleEnabled() {
-    setSettings((s) => ({ ...s, enabled: !s.enabled }));
+    setSettings((s) => {
+      const next = !s.enabled;
+      if (next && typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+        void Notification.requestPermission().then((p) => setNotifPermission(p));
+      }
+      return { ...s, enabled: next };
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   }
@@ -100,9 +117,17 @@ export default function RemindersPage() {
                     <p className="text-xs text-muted">When should we send your daily nudge?</p>
                   </div>
                   <input type="time" value={settings.time}
-                    onChange={(e) => setSettings((s) => ({ ...s, time: e.target.value }))}
+                    onChange={(e) => {
+                      setTimeError("");
+                      setSettings((s) => ({ ...s, time: e.target.value }));
+                    }}
                     className="input-base text-sm w-36 text-center font-bold" />
                 </div>
+                {timeError ? (
+                  <p className="text-xs font-semibold text-red-600 mt-2" role="alert">
+                    {timeError} — fix the time to save your reminder settings.
+                  </p>
+                ) : null}
               </motion.div>
             )}
           </motion.div>
@@ -111,6 +136,9 @@ export default function RemindersPage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             className="card p-6 bg-gradient-to-br from-amber-50 to-orange-50 border-amber-100">
             <h3 className="font-black text-dark mb-4">How reminders work</h3>
+            <p className="text-xs text-amber-900/90 mb-4 leading-relaxed bg-white/70 rounded-xl px-3 py-2 border border-amber-100">
+              Reminders fire in this browser using your chosen time. Keep EquaFit open in a tab (or install as an app) around that time, and allow notifications — background tabs can be throttled by the OS, so we also check when you return to the tab within a short window after the scheduled time.
+            </p>
             {notifPermission !== "granted" && (
               <div className="mb-4 p-3 rounded-xl bg-white border border-amber-200">
                 <p className="text-xs text-muted mb-2">

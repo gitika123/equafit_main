@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPeriodLog, addPeriodEntry, getProfile, type PeriodEntry } from "@/lib/user-store";
+import { validatePeriodDates } from "@/lib/user-validation";
 import { getSymptomMovementTips } from "@/lib/period-symptom-tips";
 
 const PHASES = [
@@ -41,6 +42,7 @@ export default function PeriodPage() {
   const [notes, setNotes] = useState("");
   const [flow, setFlow] = useState<"light" | "medium" | "heavy" | "">("");
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [periodFormError, setPeriodFormError] = useState("");
 
   useEffect(() => { setLog(getPeriodLog()); }, []);
 
@@ -83,10 +85,29 @@ export default function PeriodPage() {
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    if (!startDate) return;
-    addPeriodEntry({ startDate, endDate: endDate || startDate, notes: notes || undefined, flow: flow || undefined, symptoms: selectedSymptoms.length ? selectedSymptoms : undefined });
+    setPeriodFormError("");
+    if (!startDate) {
+      setPeriodFormError("Start date is required.");
+      return;
+    }
+    const v = validatePeriodDates(startDate, endDate);
+    if (!v.ok) {
+      setPeriodFormError(v.message);
+      return;
+    }
+    addPeriodEntry({
+      startDate,
+      endDate: v.endResolved,
+      notes: notes || undefined,
+      flow: flow || undefined,
+      symptoms: selectedSymptoms.length ? selectedSymptoms : undefined,
+    });
     setLog(getPeriodLog());
-    setStartDate(""); setEndDate(""); setNotes(""); setFlow(""); setSelectedSymptoms([]);
+    setStartDate("");
+    setEndDate("");
+    setNotes("");
+    setFlow("");
+    setSelectedSymptoms([]);
   }
 
   return (
@@ -289,16 +310,21 @@ export default function PeriodPage() {
             </div>
 
             <form onSubmit={handleAdd} className="space-y-5">
+              {periodFormError ? (
+                <p className="text-sm font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2" role="alert">
+                  {periodFormError}
+                </p>
+              ) : null}
               {/* Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">Start date *</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+                  <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setPeriodFormError(""); }}
                     className="w-full input-base text-sm" required />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-muted uppercase tracking-wide mb-1.5">End date</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+                  <input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setPeriodFormError(""); }}
                     className="w-full input-base text-sm" />
                 </div>
               </div>

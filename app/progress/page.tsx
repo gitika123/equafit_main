@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, type ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import {
   getCompletedDays,
@@ -10,7 +10,12 @@ import {
   getRunLog,
   addRunEntry,
   removeRunEntry,
+  importRunsFromWearableCsv,
+  validateWeightKg,
+  WEIGHT_LOG_KG_MIN,
+  WEIGHT_LOG_KG_MAX,
 } from "@/lib/user-store";
+import { validateOptionalDistanceKm } from "@/lib/user-validation";
 import { estimateTotalKcal } from "@/lib/activity-stats";
 
 function formatDate(d: Date) {
@@ -54,6 +59,9 @@ export default function ProgressPage() {
   const [runDistance, setRunDistance] = useState("");
   const [runNotes, setRunNotes] = useState("");
   const [runLogError, setRunLogError] = useState("");
+  const [importRunMessage, setImportRunMessage] = useState("");
+  const [weightError, setWeightError] = useState("");
+  const runImportRef = useRef<HTMLInputElement>(null);
 
   const refreshProgress = useCallback(() => {
     const completed = getCompletedDays();
@@ -114,6 +122,11 @@ export default function ProgressPage() {
       return;
     }
     const dist = parseFloat(runDistance);
+    const distCheck = validateOptionalDistanceKm(Number.isNaN(dist) ? undefined : dist);
+    if (!distCheck.ok) {
+      setRunLogError(distCheck.message);
+      return;
+    }
     addRunEntry({
       date: runDate,
       durationMin: min,
@@ -133,12 +146,34 @@ export default function ProgressPage() {
   }
 
   function logWeight() {
+    setWeightError("");
     const kg = parseFloat(newWeight);
-    if (!kg || kg < 20 || kg > 300) return;
+    const v = validateWeightKg(kg);
+    if (!v.ok) {
+      setWeightError(v.message);
+      return;
+    }
     addWeightEntry({ date: formatDate(new Date()), weightKg: kg });
     setWeights(getWeightLog());
     setNewWeight("");
     weightInputRef.current?.blur();
+  }
+
+  function onImportRunsFile(e: ChangeEvent<HTMLInputElement>) {
+    setImportRunMessage("");
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result ?? "");
+      const { added, error } = importRunsFromWearableCsv(text);
+      if (error) setImportRunMessage(error);
+      else setImportRunMessage(`Imported ${added} run${added === 1 ? "" : "s"}.`);
+      refreshProgress();
+      if (runImportRef.current) runImportRef.current.value = "";
+      setTimeout(() => setImportRunMessage(""), 5000);
+    };
+    reader.readAsText(file);
   }
 
   // BMI
@@ -292,7 +327,8 @@ export default function ProgressPage() {
                   <span>🏃</span> Run log
                 </h2>
                 <p className="text-muted text-sm mt-0.5">
-                  Log outdoor or treadmill runs — distance is optional. Shown in your weekly chart and heatmap above.
+                  Log outdoor or treadmill runs — distance is optional. Import a CSV from Apple Health / Google Fit (export then save as{" "}
+                  <code className="text-xs bg-white/80 px-1 rounded">date,duration_min</code>) or add rows manually.
                 </p>
               </div>
               <div className="flex gap-4 text-sm shrink-0">
@@ -311,6 +347,24 @@ export default function ProgressPage() {
                 {runLogError}
               </p>
             ) : null}
+
+            {importRunMessage ? (
+              <p className={`text-sm font-semibold mb-3 ${importRunMessage.startsWith("Imported") ? "text-emerald-700" : "text-red-600"}`} role="status">
+                {importRunMessage}
+              </p>
+            ) : null}
+
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+              <input ref={runImportRef} type="file" accept=".csv,.txt,text/csv" className="hidden" onChange={onImportRunsFile} />
+              <button
+                type="button"
+                onClick={() => runImportRef.current?.click()}
+                className="px-4 py-2 rounded-xl border-2 border-sky-200 bg-white text-sky-800 text-sm font-bold hover:bg-sky-50 transition-colors"
+              >
+                Import runs (CSV)
+              </button>
+              <span className="text-xs text-muted">One row per run: YYYY-MM-DD, minutes [, km]</span>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 mb-5">
               <label className="lg:col-span-2 flex flex-col gap-1 text-xs font-semibold text-muted">
@@ -428,7 +482,9 @@ export default function ProgressPage() {
           {/* Weight tracker */}
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="card p-6">
             <h2 className="font-black text-dark text-lg mb-1">Weight tracker</h2>
-            <p className="text-muted text-sm mb-5">Log daily to see your trend</p>
+            <p className="text-muted text-sm mb-5">
+              Log daily to see your trend ({WEIGHT_LOG_KG_MIN}–{WEIGHT_LOG_KG_MAX} kg).
+            </p>
 
             {chartWeights.length > 1 ? (
               <div className="mb-5 overflow-hidden rounded-xl bg-slate-50">
@@ -463,6 +519,12 @@ export default function ProgressPage() {
                 ))}
               </div>
             )}
+
+            {weightError ? (
+              <p className="text-sm font-semibold text-red-600 mb-3" role="alert">
+                {weightError}
+              </p>
+            ) : null}
 
             {/* Log weight */}
             <div className="flex gap-2">

@@ -9,10 +9,14 @@ import {
   FUEL_CUISINE_ORDER,
   getCurrentDietFuelWeek,
   getISOWeekNumber,
+  getRecipeHeroImage,
   groupRecipesByCuisine,
   type DietFuelCuisine,
   type DietFuelWeek,
+  type DietFuelRecipe,
 } from "@/lib/diet-fuel-guide";
+import { SEVEN_DAY_MEAL_PLAN, mealImage } from "@/lib/diet-fuel-meal-plan";
+import { HighlightedStep } from "@/components/HighlightedRecipeStep";
 
 const CUISINE_VISUAL: Record<DietFuelCuisine, { emoji: string; blurb: string; gradient: string }> = {
   Indian: { emoji: "🍛", blurb: "Spices, dal, eggs, roti-friendly", gradient: "from-amber-100 to-orange-50" },
@@ -22,6 +26,51 @@ const CUISINE_VISUAL: Record<DietFuelCuisine, { emoji: string; blurb: string; gr
   Mexican: { emoji: "🌮", blurb: "Beans, salsa, tortillas on a budget", gradient: "from-lime-50 to-yellow-50" },
   "Global / dorm": { emoji: "🏠", blurb: "Microwave, oats, PB classics", gradient: "from-slate-100 to-white" },
 };
+
+function RecipeSteps({ recipe }: { recipe: DietFuelRecipe }) {
+  return (
+    <ol className="list-decimal list-inside space-y-1.5 text-xs text-dark leading-relaxed">
+      {recipe.steps.map((step, si) => (
+        <li key={si}>
+          <HighlightedStep text={step} staples={recipe.pantryStaples} />
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+function RecipeCardInner({ recipe, weekHint }: { recipe: DietFuelRecipe; weekHint?: string }) {
+  const img = getRecipeHeroImage(recipe);
+  return (
+    <>
+      <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-slate-100 mb-3 border border-slate-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+      </div>
+      {weekHint && <p className="text-xs font-bold text-emerald-700 mb-1">{weekHint}</p>}
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <span
+          className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${CUISINE_BADGE_CLASS[recipe.cuisine]}`}
+        >
+          {recipe.cuisine}
+        </span>
+        <span className="text-xs font-semibold text-muted">{recipe.minutes} min</span>
+        <span className="text-xs text-muted">· {recipe.feeds}</span>
+      </div>
+      <p className="font-bold text-dark text-sm mb-2">{recipe.name}</p>
+      {recipe.whyItWorks && <p className="text-xs text-emerald-800/90 mb-2 leading-relaxed">{recipe.whyItWorks}</p>}
+      <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Usually on hand</p>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {recipe.pantryStaples.map((p) => (
+          <span key={p} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white text-slate-600 border border-slate-100">
+            {p}
+          </span>
+        ))}
+      </div>
+      <RecipeSteps recipe={recipe} />
+    </>
+  );
+}
 
 function WeekCard({
   week,
@@ -77,30 +126,7 @@ function WeekCard({
             <ul className="space-y-4">
               {week.recipes.map((r) => (
                 <li key={r.name} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span
-                      className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${CUISINE_BADGE_CLASS[r.cuisine]}`}
-                    >
-                      {r.cuisine}
-                    </span>
-                    <span className="text-xs font-semibold text-muted">{r.minutes} min</span>
-                    <span className="text-xs text-muted">· {r.feeds}</span>
-                  </div>
-                  <p className="font-bold text-dark text-sm mb-2">{r.name}</p>
-                  {r.whyItWorks && <p className="text-xs text-emerald-800/90 mb-2 leading-relaxed">{r.whyItWorks}</p>}
-                  <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Usually on hand</p>
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {r.pantryStaples.map((p) => (
-                      <span key={p} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white text-slate-600 border border-slate-100">
-                        {p}
-                      </span>
-                    ))}
-                  </div>
-                  <ol className="list-decimal list-inside space-y-1.5 text-xs text-dark leading-relaxed">
-                    {r.steps.map((step, si) => (
-                      <li key={si}>{step}</li>
-                    ))}
-                  </ol>
+                  <RecipeCardInner recipe={r} />
                 </li>
               ))}
             </ul>
@@ -113,7 +139,7 @@ function WeekCard({
 
 export default function DietFuelPage() {
   const [today, setToday] = useState<Date | null>(null);
-  const [view, setView] = useState<"themes" | "cuisine">("themes");
+  const [view, setView] = useState<"themes" | "cuisine" | "week7">("themes");
   const [cuisineFocus, setCuisineFocus] = useState<DietFuelCuisine | null>(null);
 
   useEffect(() => {
@@ -158,7 +184,7 @@ export default function DietFuelPage() {
         </div>
       </motion.div>
 
-      <div className="flex flex-wrap gap-2 mb-6 p-1 rounded-2xl bg-slate-100/80 border border-slate-200 w-fit">
+      <div className="flex flex-wrap gap-2 mb-6 p-1 rounded-2xl bg-slate-100/80 border border-slate-200 w-fit max-w-full">
         <button
           type="button"
           onClick={() => setView("themes")}
@@ -175,7 +201,16 @@ export default function DietFuelPage() {
             view === "cuisine" ? "bg-white text-emerald-800 shadow-sm" : "text-muted hover:text-dark"
           }`}
         >
-          By cuisine (visual)
+          By cuisine
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("week7")}
+          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            view === "week7" ? "bg-white text-emerald-800 shadow-sm" : "text-muted hover:text-dark"
+          }`}
+        >
+          7-day meals
         </button>
       </div>
 
@@ -190,7 +225,7 @@ export default function DietFuelPage() {
             ))}
           </div>
         </>
-      ) : (
+      ) : view === "cuisine" ? (
         <>
           <p className="text-sm text-muted mb-4 max-w-2xl">
             Tap a cuisine tile, then expand a recipe. Same content as the weekly cards — organized for quick scanning.
@@ -225,24 +260,71 @@ export default function DietFuelPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {byCuisine[cuisineFocus].map((r) => (
                   <div key={`${r.weekId}-${r.name}`} className="card p-5 border border-slate-100">
-                    <p className="text-xs font-bold text-emerald-700 mb-1">
-                      {r.weekIcon} Week theme: {r.weekTitle}
-                    </p>
-                    <p className="font-black text-dark">{r.name}</p>
-                    <p className="text-xs text-muted mt-1">
-                      {r.minutes} min · {r.feeds}
-                    </p>
-                    {r.whyItWorks && <p className="text-sm text-dark/80 mt-2">{r.whyItWorks}</p>}
-                    <ol className="list-decimal list-inside text-xs text-dark mt-3 space-y-1">
-                      {r.steps.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ol>
+                    <RecipeCardInner
+                      recipe={r}
+                      weekHint={`${r.weekIcon} Week theme: ${r.weekTitle}`}
+                    />
                   </div>
                 ))}
               </div>
             </motion.div>
           )}
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-muted mb-4 max-w-2xl">
+            Seven sample days with breakfast, lunch, and dinner — each with a reference photo, pantry list, and cooking steps with ingredients highlighted.
+          </p>
+          <div className="space-y-10 mb-6">
+            {SEVEN_DAY_MEAL_PLAN.map((day, idx) => (
+              <motion.section
+                key={day.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="card overflow-hidden border border-emerald-100"
+              >
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-3">
+                  <h2 className="text-lg font-black text-white">Day {day.dayIndex} · {day.label}</h2>
+                </div>
+                <div className="p-5 md:p-6 space-y-6">
+                  {(["Breakfast", "Lunch", "Dinner"] as const).map((label) => {
+                    const slot = label.toLowerCase() as "breakfast" | "lunch" | "dinner";
+                    const m = day[slot];
+                    return (
+                      <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 md:flex md:gap-5 md:items-start">
+                        <div className="w-full md:w-48 shrink-0 aspect-[4/3] rounded-xl overflow-hidden bg-slate-200 mb-3 md:mb-0">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={mealImage(m)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-1">{label}</p>
+                          <p className="font-black text-dark">{m.title}</p>
+                          <p className="text-xs text-muted mt-1">
+                            {m.cuisine} · {m.minutes} min
+                          </p>
+                          <div className="flex flex-wrap gap-1 mt-2 mb-3">
+                            {m.staples.map((s) => (
+                              <span key={s} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-white border border-slate-100 text-slate-600">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                          <ol className="list-decimal list-inside space-y-1 text-xs text-dark">
+                            {m.steps.map((step, si) => (
+                              <li key={si}>
+                                <HighlightedStep text={step} staples={m.staples} />
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.section>
+            ))}
+          </div>
         </>
       )}
 

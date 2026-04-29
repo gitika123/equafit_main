@@ -26,25 +26,48 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!user || !onboardingDone) return;
+    const userId = user.id;
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
 
-    const timer = window.setInterval(() => {
+    function tryFireReminder() {
       const settings = getReminderSettings();
       if (!settings.enabled) return;
       const now = new Date();
-      const hh = String(now.getHours()).padStart(2, "0");
-      const mm = String(now.getMinutes()).padStart(2, "0");
       const today = now.toISOString().slice(0, 10);
-      const key = `equafit_last_reminder_date__${user.id}`;
-      const lastSent = localStorage.getItem(key);
-      if (`${hh}:${mm}` === settings.time && lastSent !== today) {
+      const key = `equafit_last_reminder_date__${userId}`;
+      if (localStorage.getItem(key) === today) return;
+
+      const parts = settings.time.split(":");
+      const h = parseInt(parts[0] ?? "9", 10);
+      const m = parseInt(parts[1] ?? "0", 10);
+      if (Number.isNaN(h) || Number.isNaN(m)) return;
+
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0, 0);
+      const graceMs = 12 * 60 * 1000;
+      const end = new Date(start.getTime() + graceMs);
+      const t = now.getTime();
+      if (t < start.getTime() || t >= end.getTime()) return;
+
+      try {
         new Notification("EquaFit reminder", { body: getRandomReminder() });
         localStorage.setItem(key, today);
+      } catch {
+        /* ignore */
       }
-    }, 30_000);
+    }
 
-    return () => window.clearInterval(timer);
+    tryFireReminder();
+    const timer = window.setInterval(tryFireReminder, 15_000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") tryFireReminder();
+    };
+    document.addEventListener("visibilitychange", onVis);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, [user, onboardingDone]);
 
   // Desktop sidebar: show on all app pages except auth/onboarding/complete

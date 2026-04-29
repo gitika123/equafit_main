@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getGroupById, getRoutineDays, getExerciseTutorialUrl, exerciseTimerSeconds } from "@/lib/routines";
+import { getExerciseImageUrl } from "@/lib/exercise-images";
+import { getDefaultVibe, spotifyEmbedSrc, spotifyOpenUrl } from "@/lib/vibesync-playlists";
 import { addCompletedDay } from "@/lib/user-store";
 
 const GRADIENTS: Record<string, { from: string; to: string }> = {
@@ -32,6 +34,9 @@ export default function RoutineDayPage() {
   const [timerIdx, setTimerIdx] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [running, setRunning] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
+
+  const workoutPlaylist = getDefaultVibe();
 
   const closeTimer = useCallback(() => {
     setRunning(false);
@@ -188,6 +193,15 @@ export default function RoutineDayPage() {
                   >
                     {i + 1}
                   </div>
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getExerciseImageUrl(ex.name)}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-dark">{ex.name}</p>
                     <p className="text-sm text-muted mt-0.5">{ex.repsOrTime}</p>
@@ -210,6 +224,53 @@ export default function RoutineDayPage() {
               </motion.li>
             ))}
           </motion.ul>
+
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="card p-4 mb-24 md:mb-6 border border-slate-100"
+          >
+            <button
+              type="button"
+              onClick={() => setMusicOpen((o) => !o)}
+              className="w-full flex items-center justify-between gap-3 text-left"
+            >
+              <div>
+                <p className="font-black text-dark">Workout music</p>
+                <p className="text-xs text-muted mt-0.5">Spotify embed — play continues while this tab stays open</p>
+              </div>
+              <span className="text-sm font-bold text-primary shrink-0">{musicOpen ? "Hide ▲" : "Show ▼"}</span>
+            </button>
+            {musicOpen && (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs text-muted leading-relaxed">
+                  Tap <strong className="text-dark">play</strong> inside the player once (browsers block autoplay until you do). Keep this tab active for audio during your sets. For music in the{" "}
+                  <strong className="text-dark">Spotify app</strong> so it runs when you lock your phone, use{" "}
+                  <strong className="text-dark">Open in Spotify</strong> below.
+                </p>
+                <div className="rounded-xl overflow-hidden border border-slate-200 bg-black/5">
+                  <iframe
+                    title="Workout playlist"
+                    src={spotifyEmbedSrc(workoutPlaylist.spotifyPlaylistId)}
+                    width="100%"
+                    height={232}
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    className="w-full"
+                  />
+                </div>
+                <a
+                  href={spotifyOpenUrl(workoutPlaylist.spotifyPlaylistId)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#1DB954] text-white text-sm font-bold hover:brightness-110"
+                >
+                  Open in Spotify app / web ↗
+                </a>
+              </div>
+            )}
+          </motion.div>
         </div>
 
         <div className="hidden md:block space-y-4 sticky top-6">
@@ -276,6 +337,15 @@ export default function RoutineDayPage() {
               </p>
               <h2 className="text-xl font-black text-dark leading-tight mb-1">{activeExercise.name}</h2>
               <p className="text-sm text-muted mb-4">{activeExercise.repsOrTime}</p>
+              <div className="relative w-full max-h-40 rounded-xl overflow-hidden mb-4 border border-slate-100 bg-slate-50">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={getExerciseImageUrl(activeExercise.name)}
+                  alt=""
+                  className="w-full h-36 object-cover object-center"
+                  loading="lazy"
+                />
+              </div>
               <div
                 className="rounded-2xl p-8 text-center mb-4"
                 style={{ background: `linear-gradient(135deg, ${g.from}18, ${g.to}12)` }}

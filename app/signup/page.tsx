@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
+import { validateEmail, validateSignupPassword } from "@/lib/user-validation";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -17,8 +18,16 @@ export default function SignupPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!email.trim()) { setError("Please enter your email"); return; }
-    if (password.length < 4) { setError("Password must be at least 4 characters"); return; }
+    const em = validateEmail(email);
+    if (!em.ok) {
+      setError(em.message);
+      return;
+    }
+    const pw = validateSignupPassword(password);
+    if (!pw.ok) {
+      setError(pw.message);
+      return;
+    }
     const result = await signup(email.trim(), password, name.trim() || email.split("@")[0]);
     if (result.error) { setError(result.error); return; }
     router.push("/onboarding");

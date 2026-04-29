@@ -4,7 +4,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
-import type { UserProfile } from "@/lib/user-store";
+import {
+  WEIGHT_LOG_KG_MAX,
+  WEIGHT_LOG_KG_MIN,
+  validateWeightKg,
+  type UserProfile,
+} from "@/lib/user-store";
+import {
+  validateHeightCm,
+  validateAgeYears,
+  HEIGHT_CM_MIN,
+  HEIGHT_CM_MAX,
+  AGE_MIN,
+  AGE_MAX,
+} from "@/lib/user-validation";
 
 const GOALS = [
   { id: "belly-abs",    label: "Belly & Abs",       icon: "🔥" },
@@ -33,10 +46,49 @@ export default function OnboardingPage() {
   const { setProfileData, setOnboardingDone } = useAuth();
   const isMale = profile.gender === "male";
 
-  function next() {
-    if (step < 3) { setStep(step + 1); return; }
-    if (!profile.heightCm || !profile.weightKg || !profile.age || !profile.gender) return;
-    setProfileData({
+  const [stepError, setStepError] = useState("");
+  const [finishError, setFinishError] = useState("");
+
+  async function next() {
+    setStepError("");
+    setFinishError("");
+    if (step === 1) {
+      const h = profile.heightCm != null ? validateHeightCm(profile.heightCm) : { ok: false as const, message: "Enter your height." };
+      const w = profile.weightKg != null ? validateWeightKg(profile.weightKg) : { ok: false as const, message: "Enter your weight." };
+      const a = profile.age != null ? validateAgeYears(profile.age) : { ok: false as const, message: "Enter your age." };
+      if (!h.ok) {
+        setStepError(h.message);
+        return;
+      }
+      if (!w.ok) {
+        setStepError(w.message);
+        return;
+      }
+      if (!a.ok) {
+        setStepError(a.message);
+        return;
+      }
+      if (!profile.gender) {
+        setStepError("Select a gender.");
+        return;
+      }
+      setStep(step + 1);
+      return;
+    }
+    if (step === 2) {
+      const goals = profile.goals ?? [];
+      if (goals.length === 0) {
+        setStepError("Pick at least one goal to personalize your plan.");
+        return;
+      }
+      setStep(step + 1);
+      return;
+    }
+    if (!profile.heightCm || !profile.weightKg || !profile.age || !profile.gender) {
+      setFinishError("Something is missing — go back to step 1.");
+      return;
+    }
+    const { error } = await setProfileData({
       heightCm: profile.heightCm,
       weightKg: profile.weightKg,
       age: profile.age,
@@ -44,6 +96,10 @@ export default function OnboardingPage() {
       goals: profile.goals ?? [],
       periodTrackingEnabled: profile.periodTrackingEnabled ?? false,
     });
+    if (error) {
+      setFinishError(`Could not save profile: ${error}. Check your connection and Supabase setup.`);
+      return;
+    }
     setOnboardingDone();
     router.push("/");
   }
@@ -104,16 +160,19 @@ export default function OnboardingPage() {
             >
               <div className="card p-4 space-y-4">
                 {[
-                  { label: "Height (cm)", key: "heightCm", min: 100, max: 250, value: profile.heightCm },
-                  { label: "Weight (kg)", key: "weightKg", min: 30, max: 200, value: profile.weightKg },
-                  { label: "Age",         key: "age",      min: 13, max: 100, value: profile.age },
+                  { label: "Height (cm)", key: "heightCm", min: HEIGHT_CM_MIN, max: HEIGHT_CM_MAX, value: profile.heightCm },
+                  { label: "Weight (kg)", key: "weightKg", min: WEIGHT_LOG_KG_MIN, max: WEIGHT_LOG_KG_MAX, value: profile.weightKg },
+                  { label: "Age",         key: "age",      min: AGE_MIN, max: AGE_MAX, value: profile.age },
                 ].map(({ label, key, min, max, value }) => (
                   <div key={key}>
                     <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5">{label}</label>
                     <input
                       type="number" min={min} max={max}
                       value={value ?? ""}
-                      onChange={(e) => setProfile({ ...profile, [key]: Number(e.target.value) })}
+                      onChange={(e) => {
+                        setStepError("");
+                        setProfile({ ...profile, [key]: Number(e.target.value) });
+                      }}
                       className="input-base"
                     />
                   </div>
@@ -125,14 +184,14 @@ export default function OnboardingPage() {
                       <button
                         key={g}
                         type="button"
-                        onClick={() =>
+                        onClick={() => {
                           setProfile({
                             ...profile,
                             gender: g,
-                            // Enforce period tracking off for male profiles.
                             periodTrackingEnabled: g === "male" ? false : profile.periodTrackingEnabled,
-                          })
-                        }
+                          });
+                          setStepError("");
+                        }}
                         className={`py-3 rounded-xl font-semibold text-sm capitalize transition-all ${
                           profile.gender === g
                             ? "bg-gradient-fitness text-white shadow-primary"
@@ -165,7 +224,10 @@ export default function OnboardingPage() {
                       key={g.id}
                       type="button"
                       whileTap={{ scale: 0.96 }}
-                      onClick={() => toggleGoal(g.id)}
+                      onClick={() => {
+                        setStepError("");
+                        toggleGoal(g.id);
+                      }}
                       className={`py-4 px-3 rounded-2xl text-left border-2 font-semibold transition-all ${
                         active
                           ? "border-primary bg-primary/8 text-primary"
@@ -239,6 +301,12 @@ export default function OnboardingPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {(stepError || finishError) && (
+          <p className="mt-4 text-sm font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2" role="alert">
+            {finishError || stepError}
+          </p>
+        )}
 
         {/* Next button */}
         <motion.button

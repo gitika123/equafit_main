@@ -42,19 +42,47 @@ export const ROUTINE_GROUPS: RoutineGroup[] = [
   { id: "period-light", name: "Period-Friendly", tagline: "Gentle routines for cycle days", icon: "🌸", color: "purple", durationMinutes: 10, totalDays: 30 },
 ];
 
+function daySeed(groupId: string, salt: number): number {
+  const s = `${groupId}:${salt}`;
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h);
+}
+
+/** Deterministic shuffle so each day gets a different order without random reload drift. */
+function shuffleWithSeed<T>(items: T[], seed: number): T[] {
+  const arr = [...items];
+  let x = seed >>> 0;
+  const rnd = () => {
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return (x >>> 0) / 4294967296;
+  };
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function generateRoutineDays(
   groupId: RoutineGroupId,
   count: number,
   exerciseTemplates: { name: string; reps: string }[][]
 ): RoutineDay[] {
   const days: RoutineDay[] = [];
+  const nTemplates = exerciseTemplates.length;
   for (let d = 1; d <= count; d++) {
-    const templateIndex = (d - 1) % exerciseTemplates.length;
-    const template = exerciseTemplates[templateIndex];
+    const pick = daySeed(groupId, d * 7919 + 17) % nTemplates;
+    const template = exerciseTemplates[pick];
+    const shuffled = shuffleWithSeed(template, daySeed(groupId, d * 104729));
     days.push({
       day: d,
       title: `Day ${d}`,
-      exercises: template.map((e) => ({ name: e.name, repsOrTime: e.reps })),
+      exercises: shuffled.map((e) => ({ name: e.name, repsOrTime: e.reps })),
       tip: d % 5 === 0 ? "Rest 30 sec between exercises. You're doing great!" : undefined,
     });
   }

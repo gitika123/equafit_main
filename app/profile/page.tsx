@@ -12,9 +12,11 @@ import {
   getCompletedDays,
   getPeriodLog,
   getProgressStats,
+  validateWeightKg,
   type UserProfile,
   type ExportedData,
 } from "@/lib/user-store";
+import { validateHeightCm, validateAgeYears, HEIGHT_CM_MIN, HEIGHT_CM_MAX, AGE_MIN, AGE_MAX } from "@/lib/user-validation";
 
 /* ── BMI ring ── */
 function BMIRing({ bmi }: { bmi: number }) {
@@ -85,6 +87,9 @@ export default function ProfilePage() {
   const [editingWeight, setEditingWeight] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [weightDraft, setWeightDraft] = useState("");
+  const [weightSaveError, setWeightSaveError] = useState("");
+  const [profileEditError, setProfileEditError] = useState("");
+  const [profileSyncError, setProfileSyncError] = useState("");
   const [profileDraft, setProfileDraft] = useState<{ heightCm: string; age: string; gender: UserProfile["gender"]; periodTrackingEnabled: boolean }>({
     heightCm: "",
     age: "",
@@ -137,17 +142,27 @@ export default function ProfilePage() {
     };
     reader.readAsText(file);
   }
-  function handleSaveWeight() {
+  async function handleSaveWeight() {
+    if (!profile) return;
     const kg = parseFloat(weightDraft);
-    if (!profile || isNaN(kg) || kg <= 0) return;
+    const v = validateWeightKg(kg);
+    if (!v.ok) {
+      setWeightSaveError(v.message);
+      return;
+    }
+    setWeightSaveError("");
+    setProfileSyncError("");
     const updated: UserProfile = { ...profile, weightKg: kg };
-    saveProfile(updated);
+    const { error } = await saveProfile(updated);
+    if (error) setProfileSyncError(`Could not sync profile: ${error}`);
     setProfile(updated);
     setEditingWeight(false);
     refresh();
   }
   function startProfileEdit() {
     if (!profile) return;
+    setProfileEditError("");
+    setProfileSyncError("");
     setProfileDraft({
       heightCm: String(profile.heightCm),
       age: String(profile.age),
@@ -158,13 +173,25 @@ export default function ProfilePage() {
   }
   function cancelProfileEdit() {
     setEditingProfile(false);
+    setProfileEditError("");
+    setProfileSyncError("");
   }
-  function saveProfileEdits() {
+  async function saveProfileEdits() {
     if (!profile) return;
+    setProfileEditError("");
+    setProfileSyncError("");
     const heightCm = Number(profileDraft.heightCm);
     const age = Number(profileDraft.age);
-    if (!Number.isFinite(heightCm) || heightCm < 100 || heightCm > 250) return;
-    if (!Number.isFinite(age) || age < 13 || age > 100) return;
+    const h = validateHeightCm(heightCm);
+    if (!h.ok) {
+      setProfileEditError(h.message);
+      return;
+    }
+    const a = validateAgeYears(age);
+    if (!a.ok) {
+      setProfileEditError(a.message);
+      return;
+    }
     const updated: UserProfile = {
       ...profile,
       heightCm,
@@ -172,7 +199,8 @@ export default function ProfilePage() {
       gender: profileDraft.gender,
       periodTrackingEnabled: profileDraft.gender === "male" ? false : profileDraft.periodTrackingEnabled,
     };
-    saveProfile(updated);
+    const { error } = await saveProfile(updated);
+    if (error) setProfileSyncError(`Could not save to cloud: ${error}. Your changes are stored on this device.`);
     setProfile(updated);
     setEditingProfile(false);
     refresh();
@@ -316,6 +344,11 @@ export default function ProfilePage() {
                   {/* Body stats */}
                   {profile && (
                     <div className="card p-6">
+                      {profileSyncError ? (
+                        <p className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-4" role="status">
+                          {profileSyncError}
+                        </p>
+                      ) : null}
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="font-black text-dark">Body stats</h3>
                         {!editingProfile && (
@@ -330,15 +363,28 @@ export default function ProfilePage() {
                       </div>
                       {editingProfile ? (
                         <div className="space-y-4">
+                          {profileEditError ? (
+                            <p className="text-sm font-semibold text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2" role="alert">
+                              {profileEditError}
+                            </p>
+                          ) : null}
+                          {profileSyncError ? (
+                            <p className="text-sm font-semibold text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2" role="status">
+                              {profileSyncError}
+                            </p>
+                          ) : null}
                           <div className="grid grid-cols-2 gap-3">
                             <div>
                               <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5">Height (cm)</label>
                               <input
                                 type="number"
-                                min={100}
-                                max={250}
+                                min={HEIGHT_CM_MIN}
+                                max={HEIGHT_CM_MAX}
                                 value={profileDraft.heightCm}
-                                onChange={(e) => setProfileDraft((d) => ({ ...d, heightCm: e.target.value }))}
+                                onChange={(e) => {
+                                  setProfileEditError("");
+                                  setProfileDraft((d) => ({ ...d, heightCm: e.target.value }));
+                                }}
                                 className="input-base"
                               />
                             </div>
@@ -346,10 +392,13 @@ export default function ProfilePage() {
                               <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5">Age</label>
                               <input
                                 type="number"
-                                min={13}
-                                max={100}
+                                min={AGE_MIN}
+                                max={AGE_MAX}
                                 value={profileDraft.age}
-                                onChange={(e) => setProfileDraft((d) => ({ ...d, age: e.target.value }))}
+                                onChange={(e) => {
+                                  setProfileEditError("");
+                                  setProfileDraft((d) => ({ ...d, age: e.target.value }));
+                                }}
                                 className="input-base"
                               />
                             </div>
@@ -405,14 +454,17 @@ export default function ProfilePage() {
                           <div className="p-4 rounded-2xl bg-blue-50 text-center">
                             {editingWeight ? (
                               <div className="flex flex-col gap-2">
+                                {weightSaveError ? (
+                                  <p className="text-xs font-semibold text-red-600 text-center">{weightSaveError}</p>
+                                ) : null}
                                 <input autoFocus type="number" value={weightDraft}
-                                  onChange={(e) => setWeightDraft(e.target.value)}
+                                  onChange={(e) => { setWeightDraft(e.target.value); setWeightSaveError(""); }}
                                   onKeyDown={(e) => e.key === "Enter" && handleSaveWeight()}
                                   className="w-full text-center text-sm border border-blue-200 rounded-lg px-2 py-1.5" />
                                 <button onClick={handleSaveWeight} className="text-xs text-blue-600 font-bold">Save ✓</button>
                               </div>
                             ) : (
-                              <button onClick={() => { setEditingWeight(true); setWeightDraft(String(profile.weightKg)); }} className="w-full">
+                              <button onClick={() => { setWeightSaveError(""); setEditingWeight(true); setWeightDraft(String(profile.weightKg)); }} className="w-full">
                                 <p className="text-3xl font-black text-blue-600">{profile.weightKg}</p>
                                 <p className="text-xs text-muted mt-1">kg ✏️</p>
                               </button>

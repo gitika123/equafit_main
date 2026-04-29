@@ -7,6 +7,11 @@ import { motion } from "framer-motion";
 import { getGroupById } from "@/lib/routines";
 import { setCompletedDayFeeling } from "@/lib/user-store";
 
+function isValidDay(dayStr: string, totalDays: number) {
+  const n = Number(dayStr);
+  return Number.isInteger(n) && n >= 1 && n <= totalDays;
+}
+
 const FEELINGS = [
   { id: "great", label: "Great!", emoji: "🔥" },
   { id: "good", label: "Good", emoji: "💪" },
@@ -22,11 +27,26 @@ function CompleteContent() {
   const nextDay = Number(day) + 1;
   const hasNextDay = group ? nextDay <= group.totalDays : false;
   const [feeling, setFeeling] = useState<string | null>(null);
+  const [feelingError, setFeelingError] = useState("");
+
+  const totalDays = group?.totalDays ?? 0;
+  const dayNum = Number(day);
+  const canLogFeeling =
+    Boolean(groupId) &&
+    Boolean(day) &&
+    !Number.isNaN(dayNum) &&
+    group != null &&
+    isValidDay(day, totalDays);
 
   function handleFeeling(f: string) {
+    setFeelingError("");
+    if (!canLogFeeling) {
+      setFeelingError("Workout info is missing or invalid — use Mark complete from your routine day again.");
+      return;
+    }
     setFeeling(f);
     const today = new Date().toISOString().slice(0, 10);
-    setCompletedDayFeeling(groupId, Number(day), today, f as "great" | "good" | "okay" | "tired");
+    setCompletedDayFeeling(groupId, dayNum, today, f as "great" | "good" | "okay" | "tired");
   }
 
   return (
@@ -71,6 +91,11 @@ function CompleteContent() {
           className="w-full max-w-sm"
         >
           <p className="text-center text-dark font-medium mb-4">How are you feeling?</p>
+          {feelingError ? (
+            <p className="text-center text-sm text-red-600 font-semibold mb-3" role="alert">
+              {feelingError}
+            </p>
+          ) : null}
           <div className="grid grid-cols-2 gap-3">
             {FEELINGS.map((f) => (
               <motion.button

@@ -25,7 +25,7 @@ type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<{ error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
-  setProfileData: (profile: UserProfile) => void;
+  setProfileData: (profile: UserProfile) => Promise<{ error?: string }>;
   setOnboardingDone: () => void;
   refresh: () => void;
 };
@@ -137,9 +137,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }
 
-  function setProfileData(profile: UserProfile) {
-    setProfile(profile);
+  async function setProfileData(profile: UserProfile) {
+    const { error } = await setProfile(profile);
     refresh();
+    return { error };
   }
 
   function setOnboardingDoneFlag() {

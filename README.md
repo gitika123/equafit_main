@@ -46,12 +46,22 @@ Open [http://localhost:3000](http://localhost:3000). Sign up → complete onboar
    - `cp .env.example .env.local`
    - Fill `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_SUPABASE_URL` format must be `https://<project-ref>.supabase.co` (do **not** use `/rest/v1/`)
-2. In Supabase SQL editor, run:
+2. In Supabase SQL editor, run migrations in order:
    - `supabase/migrations/001_init_equafit.sql`
+   - `supabase/migrations/002_run_logs.sql` (if present)
+   - `supabase/migrations/003_profiles_onboarding_completed.sql`
 3. Enable email/password auth in Supabase Auth settings.
 4. If login shows **Email not confirmed**, either:
    - confirm the verification email, or
    - disable confirmation for development in `Authentication -> Providers -> Email`.
+
+### Verifying database integration
+
+1. **Environment** — With the app running (`npm run dev`), open `/login` and confirm you do **not** see “Supabase is not configured”.
+2. **Auth** — Sign up a test user; in Supabase **Authentication → Users**, the user should appear.
+3. **Tables** — After onboarding, open **Table Editor → `profiles`**: a row with your `user_id` should exist; `onboarding_completed` should be `true` after you finish the wizard.
+4. **Client ↔ cloud** — Complete a workout day and log a run; refresh **Table Editor** for `completed_days` / `run_logs` (when logged in, the app upserts to these tables).
+5. **RLS** — If inserts fail in the browser console, confirm you are logged in and RLS policies from `001_init_equafit.sql` are applied.
 
 ## Project structure
 

@@ -101,14 +101,11 @@ export default function VibeSyncPage() {
       {/* Default playlist — always visible first */}
       <section className="mb-8">
         <h2 className="text-lg font-black text-dark mb-1">Start here</h2>
-        <p className="text-sm text-muted mb-4">Tap to open this playlist in Spotify and load the player below.</p>
+        <p className="text-sm text-muted mb-4">Tap to load this playlist in the player below — use Open in Spotify when you want the full app.</p>
         <VibeCard
           vibe={defaultVibe}
           selected={active.id === defaultVibe.id}
-          onSelect={() => {
-            setActive(defaultVibe);
-            window.open(spotifyOpenUrl(defaultVibe.spotifyPlaylistId), "_blank", "noopener,noreferrer");
-          }}
+          onSelect={() => setActive(defaultVibe)}
         />
       </section>
 
@@ -127,10 +124,7 @@ export default function VibeSyncPage() {
               <VibeCard
                 vibe={vibe}
                 selected={active.id === vibe.id}
-                onSelect={() => {
-                  setActive(vibe);
-                  window.open(spotifyOpenUrl(vibe.spotifyPlaylistId), "_blank", "noopener,noreferrer");
-                }}
+                onSelect={() => setActive(vibe)}
               />
             </motion.div>
           ))}
