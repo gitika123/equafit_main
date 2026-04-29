@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getGroupById, getRoutineDays, getExerciseTutorialUrl, exerciseTimerSeconds } from "@/lib/routines";
-import { getExerciseImageUrl } from "@/lib/exercise-images";
 import { getDefaultVibe, spotifyEmbedSrc, spotifyOpenUrl } from "@/lib/vibesync-playlists";
 import { addCompletedDay } from "@/lib/user-store";
 
@@ -193,15 +192,6 @@ export default function RoutineDayPage() {
                   >
                     {i + 1}
                   </div>
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={getExerciseImageUrl(ex.name)}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-dark">{ex.name}</p>
                     <p className="text-sm text-muted mt-0.5">{ex.repsOrTime}</p>
@@ -337,15 +327,6 @@ export default function RoutineDayPage() {
               </p>
               <h2 className="text-xl font-black text-dark leading-tight mb-1">{activeExercise.name}</h2>
               <p className="text-sm text-muted mb-4">{activeExercise.repsOrTime}</p>
-              <div className="relative w-full max-h-40 rounded-xl overflow-hidden mb-4 border border-slate-100 bg-slate-50">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getExerciseImageUrl(activeExercise.name)}
-                  alt=""
-                  className="w-full h-36 object-cover object-center"
-                  loading="lazy"
-                />
-              </div>
               <div
                 className="rounded-2xl p-8 text-center mb-4"
                 style={{ background: `linear-gradient(135deg, ${g.from}18, ${g.to}12)` }}

@@ -9,13 +9,12 @@ import {
   FUEL_CUISINE_ORDER,
   getCurrentDietFuelWeek,
   getISOWeekNumber,
-  getRecipeHeroImage,
   groupRecipesByCuisine,
   type DietFuelCuisine,
   type DietFuelWeek,
   type DietFuelRecipe,
 } from "@/lib/diet-fuel-guide";
-import { SEVEN_DAY_MEAL_PLAN, mealImage } from "@/lib/diet-fuel-meal-plan";
+import { SEVEN_DAY_MEAL_PLAN } from "@/lib/diet-fuel-meal-plan";
 import { HighlightedStep } from "@/components/HighlightedRecipeStep";
 
 const CUISINE_VISUAL: Record<DietFuelCuisine, { emoji: string; blurb: string; gradient: string }> = {
@@ -40,13 +39,8 @@ function RecipeSteps({ recipe }: { recipe: DietFuelRecipe }) {
 }
 
 function RecipeCardInner({ recipe, weekHint }: { recipe: DietFuelRecipe; weekHint?: string }) {
-  const img = getRecipeHeroImage(recipe);
   return (
     <>
-      <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-slate-100 mb-3 border border-slate-100">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
-      </div>
       {weekHint && <p className="text-xs font-bold text-emerald-700 mb-1">{weekHint}</p>}
       <div className="flex flex-wrap items-center gap-2 mb-2">
         <span
@@ -273,7 +267,7 @@ export default function DietFuelPage() {
       ) : (
         <>
           <p className="text-sm text-muted mb-4 max-w-2xl">
-            Seven sample days with breakfast, lunch, and dinner — each with a reference photo, pantry list, and cooking steps with ingredients highlighted.
+            Seven sample days with breakfast, lunch, and dinner — each with a pantry list and cooking steps with ingredients highlighted.
           </p>
           <div className="space-y-10 mb-6">
             {SEVEN_DAY_MEAL_PLAN.map((day, idx) => (
@@ -292,12 +286,8 @@ export default function DietFuelPage() {
                     const slot = label.toLowerCase() as "breakfast" | "lunch" | "dinner";
                     const m = day[slot];
                     return (
-                      <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 md:flex md:gap-5 md:items-start">
-                        <div className="w-full md:w-48 shrink-0 aspect-[4/3] rounded-xl overflow-hidden bg-slate-200 mb-3 md:mb-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={mealImage(m)} alt="" className="w-full h-full object-cover" loading="lazy" />
-                        </div>
-                        <div className="flex-1 min-w-0">
+                      <div key={label} className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+                        <div className="min-w-0">
                           <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-1">{label}</p>
                           <p className="font-black text-dark">{m.title}</p>
                           <p className="text-xs text-muted mt-1">
