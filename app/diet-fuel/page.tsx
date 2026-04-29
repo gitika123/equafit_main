@@ -2,14 +2,26 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CUISINE_BADGE_CLASS,
   DIET_FUEL_WEEKS,
+  FUEL_CUISINE_ORDER,
   getCurrentDietFuelWeek,
   getISOWeekNumber,
+  groupRecipesByCuisine,
+  type DietFuelCuisine,
   type DietFuelWeek,
 } from "@/lib/diet-fuel-guide";
+
+const CUISINE_VISUAL: Record<DietFuelCuisine, { emoji: string; blurb: string; gradient: string }> = {
+  Indian: { emoji: "🍛", blurb: "Spices, dal, eggs, roti-friendly", gradient: "from-amber-100 to-orange-50" },
+  Chinese: { emoji: "🥢", blurb: "Soy, rice, fast stir-fry wins", gradient: "from-red-50 to-rose-50" },
+  Thai: { emoji: "🌶️", blurb: "Sour-sweet-salty without fancy imports", gradient: "from-emerald-50 to-teal-50" },
+  Mediterranean: { emoji: "🫒", blurb: "Beans, lemon, yogurt, wraps", gradient: "from-sky-50 to-indigo-50" },
+  Mexican: { emoji: "🌮", blurb: "Beans, salsa, tortillas on a budget", gradient: "from-lime-50 to-yellow-50" },
+  "Global / dorm": { emoji: "🏠", blurb: "Microwave, oats, PB classics", gradient: "from-slate-100 to-white" },
+};
 
 function WeekCard({
   week,
@@ -25,12 +37,10 @@ function WeekCard({
       animate={{ opacity: 1, y: 0 }}
       className={`card overflow-hidden ${highlight ? "ring-2 ring-primary/40 shadow-card-md" : ""}`}
     >
-      {highlight && (
-        <div className="h-1 bg-gradient-emerald" />
-      )}
+      {highlight && <div className="h-1 bg-gradient-emerald" />}
       <div className="p-5 md:p-6">
         <div className="flex items-start gap-3 mb-4">
-          <span className="text-3xl" aria-hidden>
+          <span className="text-3xl shrink-0 rounded-2xl bg-emerald-50 w-14 h-14 flex items-center justify-center border border-emerald-100" aria-hidden>
             {week.icon}
           </span>
           <div>
@@ -55,10 +65,7 @@ function WeekCard({
         <p className="text-xs font-bold text-muted uppercase tracking-widest mb-2">Shopping ideas</p>
         <div className="flex flex-wrap gap-2">
           {week.shoppingIdeas.map((s) => (
-            <span
-              key={s}
-              className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700"
-            >
+            <span key={s} className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
               {s}
             </span>
           ))}
@@ -66,15 +73,10 @@ function WeekCard({
 
         {week.recipes?.length ? (
           <>
-            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-3 mt-6">
-              Easy recipes (dorm / shared kitchen)
-            </p>
+            <p className="text-xs font-bold text-muted uppercase tracking-widest mb-3 mt-6">Easy recipes</p>
             <ul className="space-y-4">
               {week.recipes.map((r) => (
-                <li
-                  key={r.name}
-                  className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4"
-                >
+                <li key={r.name} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <span
                       className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${CUISINE_BADGE_CLASS[r.cuisine]}`}
@@ -85,9 +87,7 @@ function WeekCard({
                     <span className="text-xs text-muted">· {r.feeds}</span>
                   </div>
                   <p className="font-bold text-dark text-sm mb-2">{r.name}</p>
-                  {r.whyItWorks && (
-                    <p className="text-xs text-emerald-800/90 mb-2 leading-relaxed">{r.whyItWorks}</p>
-                  )}
+                  {r.whyItWorks && <p className="text-xs text-emerald-800/90 mb-2 leading-relaxed">{r.whyItWorks}</p>}
                   <p className="text-[10px] font-bold text-muted uppercase tracking-wider mb-1">Usually on hand</p>
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {r.pantryStaples.map((p) => (
@@ -113,9 +113,14 @@ function WeekCard({
 
 export default function DietFuelPage() {
   const [today, setToday] = useState<Date | null>(null);
+  const [view, setView] = useState<"themes" | "cuisine">("themes");
+  const [cuisineFocus, setCuisineFocus] = useState<DietFuelCuisine | null>(null);
+
   useEffect(() => {
     setToday(new Date());
   }, []);
+
+  const byCuisine = useMemo(() => groupRecipesByCuisine(), []);
 
   if (!today) {
     return null;
@@ -127,11 +132,7 @@ export default function DietFuelPage() {
 
   return (
     <main className="w-full px-4 sm:px-6 lg:px-10 pt-6 pb-28 md:pb-10 min-h-screen">
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8"
-      >
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 text-muted font-semibold text-sm mb-4 hover:text-primary"
@@ -148,8 +149,7 @@ export default function DietFuelPage() {
             <p className="text-white text-xs font-bold uppercase tracking-widest mb-2 drop-shadow-sm">Nutrition</p>
             <h1 className="text-3xl md:text-4xl font-black leading-tight">Diet Fuel Guide</h1>
             <p className="text-white text-sm md:text-base mt-2 max-w-xl leading-relaxed drop-shadow-sm">
-              Budget-friendly ideas plus quick recipes using real dorm staples — Indian, Chinese, Thai, Mediterranean, Mexican, and
-              simple global go-tos so more backgrounds feel at home.
+              Budget-friendly ideas plus quick recipes — switch between weekly themes and a visual browse by cuisine.
             </p>
             <p className="text-white/90 text-xs mt-4 font-medium">
               Calendar week {isoWeek} · Theme &quot;{current.title}&quot;
@@ -158,21 +158,96 @@ export default function DietFuelPage() {
         </div>
       </motion.div>
 
-      <p className="text-sm text-muted mb-4 max-w-2xl">
-        Eight themes cycle through the year (by ISO week), so you see a new focus weekly for two months before it repeats. Each week
-        includes three doable recipes with cuisine tags — they&apos;re student shortcuts, not restaurant-perfect, but honest about swaps
-        (halal, veg, no fancy gear).
-      </p>
-
-      <div className="grid gap-5 md:grid-cols-2 mb-6">
-        {DIET_FUEL_WEEKS.map((week, i) => (
-          <WeekCard key={week.id} week={week} highlight={i === currentIndex} />
-        ))}
+      <div className="flex flex-wrap gap-2 mb-6 p-1 rounded-2xl bg-slate-100/80 border border-slate-200 w-fit">
+        <button
+          type="button"
+          onClick={() => setView("themes")}
+          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            view === "themes" ? "bg-white text-emerald-800 shadow-sm" : "text-muted hover:text-dark"
+          }`}
+        >
+          Weekly themes
+        </button>
+        <button
+          type="button"
+          onClick={() => setView("cuisine")}
+          className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+            view === "cuisine" ? "bg-white text-emerald-800 shadow-sm" : "text-muted hover:text-dark"
+          }`}
+        >
+          By cuisine (visual)
+        </button>
       </div>
 
+      {view === "themes" ? (
+        <>
+          <p className="text-sm text-muted mb-4 max-w-2xl">
+            Eight themes rotate by calendar week. Each card has tips, shopping tags, and three recipes.
+          </p>
+          <div className="grid gap-5 md:grid-cols-2 mb-6">
+            {DIET_FUEL_WEEKS.map((week, i) => (
+              <WeekCard key={week.id} week={week} highlight={i === currentIndex} />
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-muted mb-4 max-w-2xl">
+            Tap a cuisine tile, then expand a recipe. Same content as the weekly cards — organized for quick scanning.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+            {FUEL_CUISINE_ORDER.map((c) => {
+              const v = CUISINE_VISUAL[c];
+              const count = byCuisine[c].length;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCuisineFocus(cuisineFocus === c ? null : c)}
+                  className={`text-left rounded-2xl border-2 p-4 transition-all bg-gradient-to-br ${v.gradient} ${
+                    cuisineFocus === c ? "border-emerald-500 ring-2 ring-emerald-200" : "border-slate-100 hover:border-emerald-200"
+                  }`}
+                >
+                  <span className="text-3xl">{v.emoji}</span>
+                  <p className="font-black text-dark text-sm mt-2">{c}</p>
+                  <p className="text-xs text-muted mt-0.5 line-clamp-2">{v.blurb}</p>
+                  <p className="text-xs font-bold text-emerald-700 mt-2">{count} recipes</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {cuisineFocus && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 mb-6">
+              <h2 className="text-lg font-black text-dark flex items-center gap-2">
+                <span>{CUISINE_VISUAL[cuisineFocus].emoji}</span> {cuisineFocus} recipes
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {byCuisine[cuisineFocus].map((r) => (
+                  <div key={`${r.weekId}-${r.name}`} className="card p-5 border border-slate-100">
+                    <p className="text-xs font-bold text-emerald-700 mb-1">
+                      {r.weekIcon} Week theme: {r.weekTitle}
+                    </p>
+                    <p className="font-black text-dark">{r.name}</p>
+                    <p className="text-xs text-muted mt-1">
+                      {r.minutes} min · {r.feeds}
+                    </p>
+                    {r.whyItWorks && <p className="text-sm text-dark/80 mt-2">{r.whyItWorks}</p>}
+                    <ol className="list-decimal list-inside text-xs text-dark mt-3 space-y-1">
+                      {r.steps.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+
       <p className="text-xs text-muted text-center max-w-lg mx-auto leading-relaxed">
-        Tips and recipes are general wellness ideas, not medical advice. Labels like &quot;Thai-style&quot; mean pantry-friendly flavor
-        profiles — adapt for allergies, halal/kosher/veg needs, and what&apos;s affordable where you live.
+        Tips and recipes are general wellness ideas, not medical advice. Adapt for allergies, halal/kosher/veg needs, and budget.
       </p>
     </main>
   );

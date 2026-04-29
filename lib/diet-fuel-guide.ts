@@ -505,3 +505,35 @@ export const CUISINE_BADGE_CLASS: Record<DietFuelCuisine, string> = {
   Mexican: "bg-lime-100 text-lime-900 border-lime-200",
   "Global / dorm": "bg-slate-100 text-slate-800 border-slate-200",
 };
+
+export type RecipeWithWeekMeta = DietFuelRecipe & { weekId: number; weekTitle: string; weekIcon: string };
+
+export const FUEL_CUISINE_ORDER: DietFuelCuisine[] = [
+  "Indian",
+  "Chinese",
+  "Thai",
+  "Mediterranean",
+  "Mexican",
+  "Global / dorm",
+];
+
+export function getAllRecipesWithWeekMeta(): RecipeWithWeekMeta[] {
+  const out: RecipeWithWeekMeta[] = [];
+  for (const w of DIET_FUEL_WEEKS) {
+    for (const r of w.recipes) {
+      out.push({ ...r, weekId: w.id, weekTitle: w.title, weekIcon: w.icon });
+    }
+  }
+  return out;
+}
+
+export function groupRecipesByCuisine(): Record<DietFuelCuisine, RecipeWithWeekMeta[]> {
+  const init = {} as Record<DietFuelCuisine, RecipeWithWeekMeta[]>;
+  for (const c of FUEL_CUISINE_ORDER) init[c] = [];
+  for (const w of DIET_FUEL_WEEKS) {
+    for (const r of w.recipes) {
+      init[r.cuisine].push({ ...r, weekId: w.id, weekTitle: w.title, weekIcon: w.icon });
+    }
+  }
+  return init;
+}

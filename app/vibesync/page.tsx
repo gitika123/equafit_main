@@ -101,18 +101,21 @@ export default function VibeSyncPage() {
       {/* Default playlist — always visible first */}
       <section className="mb-8">
         <h2 className="text-lg font-black text-dark mb-1">Start here</h2>
-        <p className="text-sm text-muted mb-4">When you&apos;re not sure which vibe fits, use this playlist — it&apos;s loud, driving, and workout-ready.</p>
+        <p className="text-sm text-muted mb-4">Tap to open this playlist in Spotify and load the player below.</p>
         <VibeCard
           vibe={defaultVibe}
           selected={active.id === defaultVibe.id}
-          onSelect={() => setActive(defaultVibe)}
+          onSelect={() => {
+            setActive(defaultVibe);
+            window.open(spotifyOpenUrl(defaultVibe.spotifyPlaylistId), "_blank", "noopener,noreferrer");
+          }}
         />
       </section>
 
       {/* Mood grid */}
       <section className="mb-6">
         <h2 className="text-lg font-black text-dark mb-1">Match your mood</h2>
-        <p className="text-sm text-muted mb-4">Same high-energy bar — different flavors. Tap one to load the player below.</p>
+        <p className="text-sm text-muted mb-4">Same high-energy bar — different flavors. Tap a mood to open its Spotify playlist (and load the player below).</p>
         <div className="grid gap-3 sm:grid-cols-2">
           {moods.map((vibe, i) => (
             <motion.div
@@ -124,7 +127,10 @@ export default function VibeSyncPage() {
               <VibeCard
                 vibe={vibe}
                 selected={active.id === vibe.id}
-                onSelect={() => setActive(vibe)}
+                onSelect={() => {
+                  setActive(vibe);
+                  window.open(spotifyOpenUrl(vibe.spotifyPlaylistId), "_blank", "noopener,noreferrer");
+                }}
               />
             </motion.div>
           ))}

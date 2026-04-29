@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPeriodLog, addPeriodEntry, getProfile, type PeriodEntry } from "@/lib/user-store";
+import { getSymptomMovementTips } from "@/lib/period-symptom-tips";
 
 const PHASES = [
   { id: "menstrual",  label: "Menstrual",  days: "Days 1–5",   icon: "🩸", color: "bg-rose-500",   light: "bg-rose-50",   border: "border-rose-200",   text: "text-rose-600",   tip: "Rest, warmth, and gentle movement. Your body is doing important work." },
@@ -67,6 +68,15 @@ export default function PeriodPage() {
     return log.some((e) => today >= e.startDate && today <= (e.endDate || e.startDate));
   }, [log]);
 
+  const symptomsForTips = useMemo(() => {
+    if (selectedSymptoms.length > 0) return selectedSymptoms;
+    const today = new Date().toISOString().slice(0, 10);
+    const onCycle = log.find((e) => today >= e.startDate && today <= (e.endDate || e.startDate));
+    return onCycle?.symptoms ?? [];
+  }, [log, selectedSymptoms]);
+
+  const symptomTips = useMemo(() => getSymptomMovementTips(symptomsForTips), [symptomsForTips]);
+
   function toggleSymptom(s: string) {
     setSelectedSymptoms((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
   }
@@ -83,11 +93,20 @@ export default function PeriodPage() {
     <main className="w-full px-4 sm:px-6 lg:px-10 pt-6 pb-28 md:pb-10 min-h-screen">
 
       {/* ── Header ── */}
-      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between mb-8">
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-black text-dark leading-tight">Cycle Tracker</h1>
           <p className="text-muted text-sm mt-1">Track your period, understand your phases, log symptoms.</p>
         </div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-muted font-semibold text-sm hover:text-primary shrink-0"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M12 5l-7 7 7 7" />
+          </svg>
+          Home
+        </Link>
       </motion.div>
 
       {/* ── Desktop 2-col ── */}
@@ -153,6 +172,47 @@ export default function PeriodPage() {
               );
             })}
           </motion.div>
+
+          {symptomTips.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card p-5 border-2 border-teal-100 bg-gradient-to-br from-teal-50/90 to-white"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-2xl" aria-hidden>
+                  🧘
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-dark">Movement ideas for your symptoms</p>
+                  <p className="text-xs text-muted mt-1">
+                    {selectedSymptoms.length > 0
+                      ? "Preview based on symptoms you selected in the form — save the entry to log them."
+                      : "Based on symptoms on your current cycle entry."}
+                  </p>
+                  <ul className="mt-3 space-y-3">
+                    {symptomTips.map((block) => (
+                      <li key={block.symptom} className="rounded-xl bg-white/80 border border-teal-100 p-3">
+                        <p className="text-xs font-bold uppercase tracking-wide text-teal-700">{block.symptom}</p>
+                        <p className="text-sm font-bold text-dark mt-0.5">{block.headline}</p>
+                        <ul className="mt-1.5 space-y-1 text-xs text-dark/85 list-disc list-inside">
+                          {block.moves.map((m) => (
+                            <li key={m}>{m}</li>
+                          ))}
+                        </ul>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/routines/period-light"
+                    className="inline-flex items-center gap-2 mt-4 px-4 py-2.5 rounded-xl bg-teal-600 text-white font-bold text-sm hover:bg-teal-700"
+                  >
+                    Open period-friendly routine
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Period-friendly routine banner */}
           {isOnPeriod && (

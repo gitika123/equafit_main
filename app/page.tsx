@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
-import { getCompletedDays, getProfile } from "@/lib/user-store";
+import { getCompletedDays, getProfile, getRunLog } from "@/lib/user-store";
 import { getRandomReminder } from "@/lib/reminders";
 import { ROUTINE_GROUPS, getGroupById } from "@/lib/routines";
+import { activityDates, computeCurrentStreak, estimateTotalKcal } from "@/lib/activity-stats";
 import { useEffect, useState } from "react";
 import { DietFuelPreview } from "@/components/home/DietFuelPreview";
 import { VibeSyncPreview } from "@/components/home/VibeSyncPreview";
@@ -50,21 +51,13 @@ export default function HomePage() {
   useEffect(() => {
     setMotivation(getRandomReminder());
     const completed = getCompletedDays();
+    const runsList = getRunLog();
     setTotalSessions(completed.length);
-    setCalories(completed.length * 280);
+    setCalories(Math.round(estimateTotalKcal(completed.length, runsList)));
 
-    const byDate = new Set(completed.map((d) => d.date));
+    const byDate = activityDates(completed, runsList);
     setDaysActive(byDate.size);
-
-    let streak = 0;
-    const today = new Date().toISOString().slice(0, 10);
-    const sorted = Array.from(byDate).sort().reverse();
-    for (const d of sorted) {
-      const diff = Math.floor((new Date(today).getTime() - new Date(d).getTime()) / 86400000);
-      if (diff === streak) streak++;
-      else break;
-    }
-    setStreak(streak);
+    setStreak(computeCurrentStreak(byDate));
 
     const p = getProfile();
     setProfile(p);
@@ -90,7 +83,7 @@ export default function HomePage() {
   const firstName = user?.name?.split(" ")[0] || "there";
 
   const stats = [
-    { icon: "🔥", value: streak,         label: "Day streak",     sub: streak > 0 ? "Keep it up!" : "Start today", cls: "from-orange-50 to-red-50 border-orange-100", val: "text-primary" },
+    { icon: "🔥", value: streak,         label: "Day streak",     sub: streak > 0 ? "Workouts + runs" : "Log any activity", cls: "from-orange-50 to-red-50 border-orange-100", val: "text-primary" },
     { icon: "💪", value: totalSessions,   label: "Sessions done",  sub: "All time",   cls: "from-white to-slate-50 border-slate-100",  val: "text-dark" },
     { icon: "⚡", value: `${(calories/1000).toFixed(1)}k`, label: "kcal burned", sub: "Estimated", cls: "from-amber-50 to-yellow-50 border-amber-100", val: "text-amber-600" },
     { icon: "📅", value: daysActive,      label: "Days active",    sub: "All time",   cls: "from-teal-50 to-cyan-50 border-teal-100",  val: "text-accent" },

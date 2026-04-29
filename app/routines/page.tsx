@@ -40,6 +40,17 @@ export default function RoutinesPage() {
         transition={{ duration: 0.4 }}
         className="mb-5"
       >
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-muted font-semibold text-sm hover:text-primary shrink-0"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 5l-7 7 7 7" />
+            </svg>
+            Home
+          </Link>
+        </div>
         <div className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-black text-dark">Routines</h1>

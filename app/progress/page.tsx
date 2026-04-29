@@ -11,6 +11,7 @@ import {
   addRunEntry,
   removeRunEntry,
 } from "@/lib/user-store";
+import { estimateTotalKcal } from "@/lib/activity-stats";
 
 function formatDate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -52,6 +53,7 @@ export default function ProgressPage() {
   const [runDuration, setRunDuration] = useState("");
   const [runDistance, setRunDistance] = useState("");
   const [runNotes, setRunNotes] = useState("");
+  const [runLogError, setRunLogError] = useState("");
 
   const refreshProgress = useCallback(() => {
     const completed = getCompletedDays();
@@ -60,7 +62,7 @@ export default function ProgressPage() {
     const p = getProfile();
     setProfile(p);
     setSessions(completed.length);
-    setCalories(completed.length * 280);
+    setCalories(Math.round(estimateTotalKcal(completed.length, runsList)));
 
     const byDate = new Set([...completed.map((d) => d.date), ...runsList.map((r) => r.date)]);
     setDaysActive(byDate.size);
@@ -105,8 +107,12 @@ export default function ProgressPage() {
   }, [refreshProgress]);
 
   function logRun() {
+    setRunLogError("");
     const min = parseInt(runDuration, 10);
-    if (!min || min < 1 || min > 24 * 60) return;
+    if (!runDuration.trim() || Number.isNaN(min) || min < 1 || min > 24 * 60) {
+      setRunLogError("Enter minutes (1–1440) so we can log your run.");
+      return;
+    }
     const dist = parseFloat(runDistance);
     addRunEntry({
       date: runDate,
@@ -300,6 +306,12 @@ export default function ProgressPage() {
               </div>
             </div>
 
+            {runLogError ? (
+              <p className="text-sm font-semibold text-red-600 mb-3" role="alert">
+                {runLogError}
+              </p>
+            ) : null}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 mb-5">
               <label className="lg:col-span-2 flex flex-col gap-1 text-xs font-semibold text-muted">
                 Date
@@ -401,7 +413,9 @@ export default function ProgressPage() {
                 <p className="text-5xl font-black text-amber-600">
                   <AnimCount to={calories} /> <span className="text-2xl">kcal</span>
                 </p>
-                <p className="text-sm text-amber-700/70 mt-2">Based on {sessions} completed sessions × 280 kcal avg.</p>
+                <p className="text-sm text-amber-700/70 mt-2">
+                  Sessions (~280 kcal each) plus runs (~10 kcal/min estimate). For motivation only — not medical advice.
+                </p>
               </div>
               <span className="text-6xl opacity-25">⚡</span>
             </div>
