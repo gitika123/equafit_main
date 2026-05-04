@@ -14,6 +14,10 @@ import {
 } from "@/lib/user-store";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
+function logSyncIssues(errors: string[]) {
+  if (errors.length) console.warn("[EquaFit] Cloud sync:", errors.join("; "));
+}
+
 type AuthState = {
   user: StoredUser | null;
   profile: UserProfile | null;
@@ -25,7 +29,10 @@ type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<{ error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<{ error?: string }>;
   logout: () => Promise<void>;
-  setProfileData: (profile: UserProfile) => Promise<{ error?: string }>;
+  setProfileData: (
+    profile: UserProfile,
+    opts?: { completeOnboarding?: boolean }
+  ) => Promise<{ error?: string }>;
   setOnboardingDone: () => void;
   refresh: () => void;
 };
@@ -63,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               (sessionUser.email?.split("@")[0] ?? "User"),
             createdAt: sessionUser.created_at ?? new Date().toISOString(),
           });
-          await syncUserDataFromCloud();
+          logSyncIssues((await syncUserDataFromCloud()).errors);
         }
         supabase.auth.onAuthStateChange((_event, session) => {
           void (async () => {
@@ -77,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 (u.email?.split("@")[0] ?? "User"),
               createdAt: u.created_at ?? new Date().toISOString(),
             });
-            await syncUserDataFromCloud();
+            logSyncIssues((await syncUserDataFromCloud()).errors);
           } else {
             setStoredUser(null);
           }
@@ -104,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: (data.user.user_metadata?.name as string | undefined) ?? email.split("@")[0],
       createdAt: data.user.created_at ?? new Date().toISOString(),
     });
-    await syncUserDataFromCloud();
+    logSyncIssues((await syncUserDataFromCloud()).errors);
     refresh();
     return {};
   }
@@ -126,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: ((data.user.user_metadata?.name as string | undefined) ?? name) || email.split("@")[0],
       createdAt: data.user.created_at ?? new Date().toISOString(),
     });
-    await syncUserDataFromCloud();
+    logSyncIssues((await syncUserDataFromCloud()).errors);
     refresh();
     return {};
   }
@@ -137,8 +144,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }
 
-  async function setProfileData(profile: UserProfile) {
-    const { error } = await setProfile(profile);
+  async function setProfileData(profile: UserProfile, opts?: { completeOnboarding?: boolean }) {
+    const { error } = await setProfile(profile, opts);
     refresh();
     return { error };
   }

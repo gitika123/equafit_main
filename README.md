@@ -50,6 +50,7 @@ Open [http://localhost:3000](http://localhost:3000). Sign up → complete onboar
    - `supabase/migrations/001_init_equafit.sql`
    - `supabase/migrations/002_run_logs.sql` (if present)
    - `supabase/migrations/003_profiles_onboarding_completed.sql`
+   - `supabase/migrations/004_profiles_trigger_weight_entries.sql` (auto-creates a `profiles` row on signup + `weight_entries` for Progress weight history)
 3. Enable email/password auth in Supabase Auth settings.
 4. If login shows **Email not confirmed**, either:
    - confirm the verification email, or
@@ -59,9 +60,9 @@ Open [http://localhost:3000](http://localhost:3000). Sign up → complete onboar
 
 1. **Environment** — With the app running (`npm run dev`), open `/login` and confirm you do **not** see “Supabase is not configured”.
 2. **Auth** — Sign up a test user; in Supabase **Authentication → Users**, the user should appear.
-3. **Tables** — After onboarding, open **Table Editor → `profiles`**: a row with your `user_id` should exist; `onboarding_completed` should be `true` after you finish the wizard.
-4. **Client ↔ cloud** — Complete a workout day and log a run; refresh **Table Editor** for `completed_days` / `run_logs` (when logged in, the app upserts to these tables).
-5. **RLS** — If inserts fail in the browser console, confirm you are logged in and RLS policies from `001_init_equafit.sql` are applied.
+3. **Tables** — After onboarding, open **Table Editor → `profiles`**: a row with your `user_id` should exist (after migration `004`, new signups get a row as soon as the auth user is created); `onboarding_completed` should be `true` after you finish the wizard.
+4. **Client ↔ cloud** — Complete a workout day, log a run, and add a weight entry on **Progress**; refresh **Table Editor** for `completed_days`, `run_logs`, and `weight_entries`.
+5. **RLS** — If inserts fail in the browser console, confirm you are logged in and RLS policies from the migrations are applied. Failed writes log as `[EquaFit DB …]` or `[EquaFit] Cloud sync:` in the console.
 
 ## Project structure
 
@@ -96,7 +97,10 @@ equafit/
 │   └── diet-fuel-guide.ts    # Weekly themes + ISO week rotation
 ├── supabase/
 │   └── migrations/
-│       └── 001_init_equafit.sql
+│       ├── 001_init_equafit.sql
+│       ├── 002_run_logs.sql
+│       ├── 003_profiles_onboarding_completed.sql
+│       └── 004_profiles_trigger_weight_entries.sql
 └── ...
 ```
 

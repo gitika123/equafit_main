@@ -43,7 +43,7 @@ export default function OnboardingPage() {
     goals: [], periodTrackingEnabled: false,
   });
   const router = useRouter();
-  const { setProfileData, setOnboardingDone } = useAuth();
+  const { setProfileData } = useAuth();
   const isMale = profile.gender === "male";
 
   const [stepError, setStepError] = useState("");
@@ -88,19 +88,21 @@ export default function OnboardingPage() {
       setFinishError("Something is missing — go back to step 1.");
       return;
     }
-    const { error } = await setProfileData({
-      heightCm: profile.heightCm,
-      weightKg: profile.weightKg,
-      age: profile.age,
-      gender: profile.gender as "male" | "female" | "other",
-      goals: profile.goals ?? [],
-      periodTrackingEnabled: profile.periodTrackingEnabled ?? false,
-    });
+    const { error } = await setProfileData(
+      {
+        heightCm: profile.heightCm,
+        weightKg: profile.weightKg,
+        age: profile.age,
+        gender: profile.gender as "male" | "female" | "other",
+        goals: profile.goals ?? [],
+        periodTrackingEnabled: profile.periodTrackingEnabled ?? false,
+      },
+      { completeOnboarding: true }
+    );
     if (error) {
       setFinishError(`Could not save profile: ${error}. Check your connection and Supabase setup.`);
       return;
     }
-    setOnboardingDone();
     router.push("/");
   }
 
