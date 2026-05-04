@@ -29,7 +29,14 @@ export default function SignupPage() {
       return;
     }
     const result = await signup(email.trim(), password, name.trim() || email.split("@")[0]);
-    if (result.error) { setError(result.error); return; }
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (result.needsEmailConfirmation) {
+      router.push("/login?notice=confirm-email");
+      return;
+    }
     router.push("/onboarding");
   }
 

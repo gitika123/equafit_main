@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -12,8 +12,18 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const router = useRouter();
   const { login } = useAuth();
+
+  useEffect(() => {
+    const notice = new URLSearchParams(window.location.search).get("notice");
+    if (notice === "confirm-email") {
+      setInfo(
+        "Check your email and tap the confirmation link. After that, sign in here to finish setup (your profile saves only once you have an active session)."
+      );
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,6 +80,11 @@ export default function LoginPage() {
         >
           <div className="glass rounded-3xl p-6 shadow-card-lg">
             <h2 className="text-xl font-black text-dark mb-5">Welcome back 👋</h2>
+            {info && (
+              <p className="text-sm font-medium text-emerald-900 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 mb-4 leading-relaxed">
+                {info}
+              </p>
+            )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-muted uppercase tracking-widest mb-1.5">Email</label>

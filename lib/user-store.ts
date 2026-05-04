@@ -132,17 +132,43 @@ export async function setProfile(
   opts?: { completeOnboarding?: boolean }
 ): Promise<{ error?: string }> {
   if (typeof window === "undefined") return {};
-  saveScopedJson(STORAGE_KEYS.profile, profile);
-  const userId = getCurrentUserId();
-  if (!supabase || !userId) {
-    if (opts?.completeOnboarding) {
+
+  if (!supabase) {
+    const uid = getCurrentUserId();
+    if (uid) saveScopedJson(STORAGE_KEYS.profile, profile);
+    if (opts?.completeOnboarding && uid) {
       localStorage.setItem(scopedKey(STORAGE_KEYS.onboardingDone), "true");
     }
     return {};
   }
+
+  const { data: authData, error: authErr } = await supabase.auth.getUser();
+  const u = authData.user;
+  if (authErr || !u) {
+    return {
+      error:
+        "You are not fully signed in yet (no session). If you just registered, open the confirmation link in your email, then sign in — or turn off email confirmation for development in Supabase Auth settings.",
+    };
+  }
+
+  const localId = getCurrentUserId();
+  if (localId && localId !== u.id) {
+    return { error: "Session does not match this account. Try signing out and signing in again." };
+  }
+  if (!localId) {
+    setStoredUser({
+      id: u.id,
+      email: u.email ?? "",
+      name: (u.user_metadata?.name as string | undefined) ?? u.email?.split("@")[0] ?? "User",
+      createdAt: u.created_at ?? new Date().toISOString(),
+    });
+  }
+
+  saveScopedJson(STORAGE_KEYS.profile, profile);
+
   const onboardingCompleted = opts?.completeOnboarding ? true : isOnboardingDone();
   const { error } = await supabase.from("profiles").upsert({
-    user_id: userId,
+    user_id: u.id,
     height_cm: profile.heightCm,
     weight_kg: profile.weightKg,
     age: profile.age,

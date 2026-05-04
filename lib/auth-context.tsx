@@ -27,7 +27,11 @@ type AuthState = {
 
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<{ error?: string }>;
-  signup: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  signup: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<{ error?: string; needsEmailConfirmation?: boolean }>;
   logout: () => Promise<void>;
   setProfileData: (
     profile: UserProfile,
@@ -127,6 +131,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     if (error) return { error: error.message };
     if (!data.user) return { error: "Signup failed." };
+
+    if (!data.session) {
+      // No JWT yet (e.g. "Confirm email" enabled). RLS policies require auth.uid(); DB writes would fail.
+      return { needsEmailConfirmation: true };
+    }
+
     setStoredUser({
       id: data.user.id,
       email: data.user.email ?? email,

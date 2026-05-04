@@ -62,7 +62,7 @@ Open [http://localhost:3000](http://localhost:3000). Sign up → complete onboar
 2. **Auth** — Sign up a test user; in Supabase **Authentication → Users**, the user should appear.
 3. **Tables** — After onboarding, open **Table Editor → `profiles`**: a row with your `user_id` should exist (after migration `004`, new signups get a row as soon as the auth user is created); `onboarding_completed` should be `true` after you finish the wizard.
 4. **Client ↔ cloud** — Complete a workout day, log a run, and add a weight entry on **Progress**; refresh **Table Editor** for `completed_days`, `run_logs`, and `weight_entries`.
-5. **RLS** — If inserts fail in the browser console, confirm you are logged in and RLS policies from the migrations are applied. Failed writes log as `[EquaFit DB …]` or `[EquaFit] Cloud sync:` in the console.
+5. **RLS** — If inserts fail in the browser console, confirm you are logged in and RLS policies from the migrations are applied. Failed writes log as `[EquaFit DB …]` or `[EquaFit] Cloud sync:` in the console. If you see **`new row violates row-level security policy for table "profiles"`** right after sign-up, Supabase likely has **email confirmation** enabled: you only get a database session after confirming the link — use **Authentication → Providers → Email → Confirm email** off for local dev, or confirm email then **log in** before onboarding.
 
 ## Project structure
 
